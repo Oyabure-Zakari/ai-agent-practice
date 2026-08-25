@@ -49,7 +49,7 @@ const structuredLlm = llm.withStructuredOutput(evaluationSchema);
 const improver = llm.withStructuredOutput(improvedJokeSchema);
 
 // Evaluate joke
-const scoreTheJoke: GraphNode<typeof State> = async (state) => {
+const evaluateJoke: GraphNode<typeof State> = async (state) => {
   const msg = await structuredLlm.invoke(`Evaluate this joke from 1 to 10: ${state.joke}`);
 
   return {
@@ -105,16 +105,16 @@ Return only the final improved joke.
 // Define the graph
 const graph = new StateGraph(State)
   // Add the nodes to the graph
-  .addNode("scoreTheJoke", scoreTheJoke)
+  .addNode("evaluateJoke", evaluateJoke)
   .addNode("improveJoke", improveJoke)
   // Add the edges to the graph
-  .addEdge("__start__", "scoreTheJoke")
+  .addEdge("__start__", "evaluateJoke")
   // Add the conditional edge to the graph
-  .addConditionalEdges("scoreTheJoke", checkIfJokeIsGood)
+  .addConditionalEdges("evaluateJoke", checkIfJokeIsGood)
   // Add the edge to the graph
-  .addEdge("improveJoke", "__end__")
+  .addEdge("improveJoke", "evaluateJoke")
   // Compile the graph
   .compile();
 
-  const aiMessage = await graph.invoke({ joke: "What's the difference between a cat and a dog? A cat has four legs, a dog has four legs." });
+  const aiMessage = await graph.invoke({ joke: "Why did the frog walk across the road? because it didn't hop over the fence" });
   console.log(aiMessage);
