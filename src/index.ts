@@ -54,6 +54,7 @@ const improver = llm.withStructuredOutput(improvedJokeSchema);
 
 // Evaluate joke
 const evaluateJoke: GraphNode<typeof State> = async (state) => {
+  console.log("Evaluating joke........");
   const msg = await structuredLlm.invoke(`Evaluate this joke from 1 to 10: ${state.joke}`);
 
   return {
@@ -73,6 +74,7 @@ const checkIfJokeIsGood: ConditionalEdgeRouter<{ InputSchema: typeof State; Node
 
 // Improve the joke
 const improveJoke: GraphNode<typeof State> = async (state) => {
+  console.log("Improving joke........");
   const msg = await improver.invoke(`
 You are an expert comedy writer.
 
@@ -122,14 +124,18 @@ const graph = new StateGraph(State)
     cache, // Pass the cache instance to the graph
   });
 
-// First call → hits the API
+// First call → should execute the nodes and call the API
+console.time("First request");
 const aiMessage1 = await graph.invoke({
   joke: "Why did the frog walk across the road? because it didn't hop over the fence",
 });
+console.timeEnd("First request");
 console.log("First:", aiMessage1);
 
-// Second call with the exact same input → cache hit (no API calls)
+// Second call → should use the cached node results
+console.time("Second request");
 const aiMessage2 = await graph.invoke({
   joke: "Why did the frog walk across the road? because it didn't hop over the fence",
 });
+console.timeEnd("Second request");
 console.log("Second (cached):", aiMessage2);
