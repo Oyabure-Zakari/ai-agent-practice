@@ -1,7 +1,11 @@
+import { InMemoryCache } from '@langchain/langgraph-checkpoint';
 import { ChatGroq } from '@langchain/groq';
 import { StateGraph, StateSchema, type ConditionalEdgeRouter, type GraphNode } from '@langchain/langgraph';
 import 'dotenv/config';
 import { z } from 'zod/v4';
+
+// Create ONE cache instance, shared across the whole process/graph
+const cache = new InMemoryCache();
 
 // Initialize the LLM
 const llm = new ChatGroq({
@@ -104,17 +108,28 @@ Return only the final improved joke.
 
 // Define the graph
 const graph = new StateGraph(State)
-  // Add the nodes to the graph
-  .addNode("evaluateJoke", evaluateJoke)
-  .addNode("improveJoke", improveJoke)
-  // Add the edges to the graph
+  .addNode("evaluateJoke", evaluateJoke, {
+    // Set a cache policy for this node. The result of this node will be cached for 60 seconds.
+    cachePolicy: { ttl: 60 },
+  })
+  .addNode("improveJoke", improveJoke, {
+    cachePolicy: { ttl: 60 },
+  })
   .addEdge("__start__", "evaluateJoke")
-  // Add the conditional edge to the graph
   .addConditionalEdges("evaluateJoke", checkIfJokeIsGood)
-  // Add the edge to the graph
   .addEdge("improveJoke", "evaluateJoke")
-  // Compile the graph
-  .compile();
+  .compile({
+    cache, // Pass the cache instance to the graph
+  });
 
-  const aiMessage = await graph.invoke({ joke: "Why did the frog walk across the road? because it didn't hop over the fence" });
-  console.log(aiMessage);
+// First call → hits the API
+const aiMessage1 = await graph.invoke({
+  joke: "Why did the frog walk across the road? because it didn't hop over the fence",
+});
+console.log("First:", aiMessage1);
+
+// Second call with the exact same input → cache hit (no API calls)
+const aiMessage2 = await graph.invoke({
+  joke: "Why did the frog walk across the road? because it didn't hop over the fence",
+});
+console.log("Second (cached):", aiMessage2);
