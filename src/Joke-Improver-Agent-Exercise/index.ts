@@ -34,5 +34,93 @@
       4) Update the improved joke state
 
   * NOTE:
-    - Since its a loop prevent the agent from looping indefinitely. The question is at what part of the flow will I add this and how?
+    - Since its a loop prevent the agent from looping indefinitely.
+    - Example
+        text
+        Maximum attempts = 5
+        IF score >= 7
+          → END
+        IF attempts >= 5
+          → END
+        OTHERWISE
+          → Improve → Evaluate again
  */
+
+import { ChatGroq } from "@langchain/groq";
+import { StateSchema, type GraphNode } from "@langchain/langgraph";
+import "dotenv/config";
+import * as z from "zod";
+
+  // Shared variables
+  const model = "openai/gpt-oss-120b";
+  const apiKey = process.env.GROQ_API_KEY || "";
+  
+  // Set up the LLM
+  const jokeEvaluatorLLm = new ChatGroq({ 
+    model, 
+    apiKey,
+    temperature: 0, // 0 means the model will be more conservative and less creative
+    maxTokens: 500, // This is the maximum number of tokens the model can generate for the response (i.e how much new text the model is allowed to generate), maxTokens: 100 is basically saying:"Give me a concise evaluation, and don't generate more than roughly 100 tokens."
+  });
+
+    const jokeImproverLLm = new ChatGroq({ 
+    model, 
+    apiKey,
+    temperature: 1, // 1 means the model will be more creative and less conservative
+    maxTokens: 200, // Here we are allowing the model to generate more tokens, because we want it to be  more detailed.
+  });
+
+  // Initialize the state schema for the graph
+  const State = new StateSchema({
+  joke: z.string().describe("The current joke"),
+  // Optional fields because they are not present at the start of the graph, but will be added later
+  jokeOverallScore: z.number().optional().describe("The overall score of the joke"),
+  jokeFeedback: z.string().optional().describe("The evaluator's feedback"),
+  improvedJoke: z.string().optional().describe("The improved joke"),
+});
+
+const jokeEvaluationSchema = z.object({
+  humor: z.number().min(1).max(10),
+  originality: z.number().min(1).max(10),
+  delivery: z.number().min(1).max(10),
+  clarity: z.number().min(1).max(10),
+  feedback: z.string(),
+});
+
+const structuredJokeEvaluatorLLm = jokeEvaluatorLLm.withStructuredOutput(jokeEvaluationSchema);
+
+const evaluateJoke: GraphNode<typeof State> = async (state) => {
+  const response = await structuredJokeEvaluatorLLm.invoke(
+    `
+    You are a joke evaluator, evaluate this joke:${state.joke} based on the following four criteria:
+    1. Humor — How funny is the joke?
+    2. Originality — How creative, fresh, or unexpected is the joke?
+    3. Delivery — How well does the setup lead into the punchline?
+    4. Clarity — How easy is the joke to understand?
+
+    ### Instructions
+    1. Score each criterion from 1 to 10.
+    2. Provide concise feedback explaining the joke's weaknesses and what could be improved.
+    3. If the joke is already strong, explain briefly why it works.
+    4. Be objective and consistent when scoring.
+
+    ### Scoring Guidelines
+    1 to 3: Poor
+    4 to 6: Average
+    7 to 8: Good
+    9 to 10: Excellent
+    `
+  );
+  const { humor, originality, delivery, clarity, feedback } = response;
+
+  const overallScore = (humor + originality + delivery + clarity) / 4;
+  console.log("Response:",response, "", "Overall score:",overallScore);
+  return { 
+    jokeFeedback: feedback,
+    jokeOverallScore: overallScore
+  };
+};
+
+evaluateJoke({
+  joke: "Why did the frog walk across the road? because it didn't hop over the fence", 
+});
