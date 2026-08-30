@@ -58,33 +58,33 @@ The evaluator should score the joke on a **1–10 scale**.
 
 How funny is the joke?
 
-* **1–3:** Not funny
-* **4–6:** Somewhat funny
-* **7–10:** Very funny
+- **1–3:** Not funny
+- **4–6:** Somewhat funny
+- **7–10:** Very funny
 
 #### 2. Originality — 1–10
 
 How creative or original is the joke?
 
-* **1–3:** Very predictable or cliché
-* **4–6:** Somewhat original
-* **7–10:** Highly creative or unexpected
+- **1–3:** Very predictable or cliché
+- **4–6:** Somewhat original
+- **7–10:** Highly creative or unexpected
 
 #### 3. Delivery — 1–10
 
 How naturally does the setup lead to the punchline?
 
-* **1–3:** Poor setup/punchline connection
-* **4–6:** Decent delivery
-* **7–10:** Strong setup and punchline
+- **1–3:** Poor setup/punchline connection
+- **4–6:** Decent delivery
+- **7–10:** Strong setup and punchline
 
 #### 4. Clarity — 1–10
 
 How easy is the joke to understand?
 
-* **1–3:** Confusing
-* **4–6:** Understandable but could be clearer
-* **7–10:** Clear and easy to understand
+- **1–3:** Confusing
+- **4–6:** Understandable but could be clearer
+- **7–10:** Clear and easy to understand
 
 ---
 
@@ -136,10 +136,10 @@ Because he used up all his cache."
 
 The evaluator should:
 
-* Analyze the joke
-* Score each criterion from 1–10
-* Calculate an overall score
-* Provide feedback explaining weaknesses
+- Analyze the joke
+- Score each criterion from 1–10
+- Calculate an overall score
+- Provide feedback explaining weaknesses
 
 Example output:
 
@@ -149,7 +149,6 @@ Example output:
   "originality": 8,
   "delivery": 5,
   "clarity": 9,
-  "overallScore": 7,
   "feedback": "The joke is clear and has a decent technical pun, but the punchline could be more unexpected."
 }
 ```
@@ -175,10 +174,10 @@ overallScore >= 7
 
 If the joke scores below 7, the improver should:
 
-* Read the original joke
-* Read the evaluator's feedback
-* Rewrite the joke
-* Produce an improved version
+- Read the original joke
+- Read the evaluator's feedback
+- Rewrite the joke
+- Produce an improved version
 
 ### 5. Loop
 
@@ -222,12 +221,12 @@ Implement this workflow using **LangGraph.js**.
 
 Try to determine:
 
-* What should your graph state contain?
-* What should the evaluator return?
-* What should the improver receive?
-* How will you calculate the overall score?
-* How will you create the conditional edge?
-* How will you prevent the agent from looping indefinitely?
+- What should your graph state contain?
+- What should the evaluator return?
+- What should the improver receive?
+- How will you calculate the overall score?
+- How will you create the conditional edge?
+- How will you prevent the agent from looping indefinitely?
 
 ### Bonus Challenge
 
