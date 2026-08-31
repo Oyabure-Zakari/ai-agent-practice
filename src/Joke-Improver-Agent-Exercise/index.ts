@@ -67,7 +67,7 @@ import * as z from "zod";
     model, 
     apiKey,
     temperature: 1, // 1 means the model will be more creative.
-    maxTokens: 200, 
+    maxTokens: 800, 
   });
 
   // Initialize the state schema for the graph
@@ -79,7 +79,7 @@ import * as z from "zod";
   improvedJoke: z.string().optional().describe("The improved joke"),
 });
 
-// Structure LLM's output
+// Structure the LLM's output
 const jokeEvaluationSchema = z.object({
   humor: z.number().min(1).max(10),
   originality: z.number().min(1).max(10),
@@ -91,8 +91,8 @@ const jokeEvaluationSchema = z.object({
 // Add the output structure to the LLM
 const structuredJokeEvaluatorLLm = jokeEvaluatorLLm.withStructuredOutput(jokeEvaluationSchema);
 
-// Nodes
-// Evaluate the joke
+// Create nodes
+// Node to evaluate the joke
 const evaluateJoke: GraphNode<typeof State> = async (state) => {
   const response = await structuredJokeEvaluatorLLm.invoke(
     `
@@ -118,13 +118,33 @@ const evaluateJoke: GraphNode<typeof State> = async (state) => {
   const { humor, originality, delivery, clarity, feedback } = response;
 
   const overallScore = (humor + originality + delivery + clarity) / 4;
-  console.log("Response:",response, "", "Overall score:",overallScore);
+  // console.log("Response:",response, "", "Overall score:",overallScore);
   return { 
     jokeFeedback: feedback,
     jokeOverallScore: overallScore
   };
 };
 
-evaluateJoke({
-  joke: "Why did the frog walk across the road? because it didn't hop over the fence", 
-});
+// Node to improve the joke
+const improveJoke: GraphNode<typeof State> = async (state) => {
+  const response = await jokeImproverLLm.invoke(
+    `
+    You are a joke improver, your task is to improve this joke: ${state.joke}.
+
+    ### Follow these steps:
+    1. Read and understand the original joke.
+    2. Read and understand the ${state.jokeFeedback} and ${state.jokeOverallScore}.
+    3. Produce a new, improved version of the joke.
+    6. Preserve the original joke's core idea where possible, but improve its humor, originality, clarity, and delivery.
+
+    Return **only the improved joke**. It should be plain text no fancy format and do not include explanations, analysis, feedback, or the original joke.
+    `
+  );
+  // console.log("Joke Improver:",response.content);
+  return { 
+    improvedJoke: String(response.content)
+  };
+};
+
+
+
