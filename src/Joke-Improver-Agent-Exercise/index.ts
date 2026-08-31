@@ -59,15 +59,15 @@ import * as z from "zod";
   const jokeEvaluatorLLm = new ChatGroq({ 
     model, 
     apiKey,
-    temperature: 0, // 0 means the model will be more conservative and less creative
-    maxTokens: 500, // This is the maximum number of tokens the model can generate for the response (i.e how much new text the model is allowed to generate), maxTokens: 100 is basically saying:"Give me a concise evaluation, and don't generate more than roughly 100 tokens."
+    maxTokens: 400, 
+    temperature: 0, // 0 means the model will be deterministic and less creative.
   });
 
     const jokeImproverLLm = new ChatGroq({ 
     model, 
     apiKey,
-    temperature: 1, // 1 means the model will be more creative and less conservative
-    maxTokens: 200, // Here we are allowing the model to generate more tokens, because we want it to be  more detailed.
+    temperature: 1, // 1 means the model will be more creative.
+    maxTokens: 200, 
   });
 
   // Initialize the state schema for the graph
@@ -79,6 +79,7 @@ import * as z from "zod";
   improvedJoke: z.string().optional().describe("The improved joke"),
 });
 
+// Structure LLM's output
 const jokeEvaluationSchema = z.object({
   humor: z.number().min(1).max(10),
   originality: z.number().min(1).max(10),
@@ -87,8 +88,11 @@ const jokeEvaluationSchema = z.object({
   feedback: z.string(),
 });
 
+// Add the output structure to the LLM
 const structuredJokeEvaluatorLLm = jokeEvaluatorLLm.withStructuredOutput(jokeEvaluationSchema);
 
+// Nodes
+// Evaluate the joke
 const evaluateJoke: GraphNode<typeof State> = async (state) => {
   const response = await structuredJokeEvaluatorLLm.invoke(
     `
