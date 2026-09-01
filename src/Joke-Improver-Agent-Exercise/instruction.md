@@ -26,9 +26,9 @@ The agent should use a **loop** where the joke is:
                   └────────┬────────┘
                            │
                            ▼
-                  ┌─────────────────┐
-                  │  Is score ≥ 7? │
-                  └───────┬─────┬───┘
+                  ┌──────────────────┐
+                  │ Is score ≥ 3.5? │
+                  └───────┬─────┬────┘
                           │     │
                      YES  │     │  NO
                           │     │
@@ -40,7 +40,7 @@ The agent should use a **loop** where the joke is:
                                        ▼
                                 ┌─────────────────┐
                                 │  Evaluate Joke  │
-                                │     Again       │
+                                │      Again      │
                                 └───────┬─────────┘
                                         │
                                         └──────► LOOP
@@ -50,68 +50,78 @@ The agent should use a **loop** where the joke is:
 
 ## Evaluation System
 
-The evaluator should score the joke on a **1–10 scale**.
+The evaluator should score the joke on a **1–5 scale**.
 
 ### Scoring Criteria
 
-#### 1. Humor — 1–10
+#### 1. Humor — 1–5
 
 How funny is the joke?
 
-- **1–3:** Not funny
-- **4–6:** Somewhat funny
-- **7–10:** Very funny
+* **1:** Not funny
+* **2:** Slightly funny
+* **3:** Somewhat funny
+* **4:** Very funny
+* **5:** Extremely funny
 
-#### 2. Originality — 1–10
+#### 2. Originality — 1–5
 
-How creative or original is the joke?
+How creative, fresh, or unexpected is the joke?
 
-- **1–3:** Very predictable or cliché
-- **4–6:** Somewhat original
-- **7–10:** Highly creative or unexpected
+* **1:** Very predictable or cliché
+* **2:** Mostly predictable
+* **3:** Somewhat original
+* **4:** Creative and fairly unexpected
+* **5:** Highly creative and unexpected
 
-#### 3. Delivery — 1–10
+#### 3. Delivery — 1–5
 
 How naturally does the setup lead to the punchline?
 
-- **1–3:** Poor setup/punchline connection
-- **4–6:** Decent delivery
-- **7–10:** Strong setup and punchline
+* **1:** Poor setup/punchline connection
+* **2:** Weak delivery
+* **3:** Decent delivery
+* **4:** Strong setup and punchline
+* **5:** Excellent setup and punchline
 
-#### 4. Clarity — 1–10
+#### 4. Clarity — 1–5
 
 How easy is the joke to understand?
 
-- **1–3:** Confusing
-- **4–6:** Understandable but could be clearer
-- **7–10:** Clear and easy to understand
+* **1:** Very confusing
+* **2:** Difficult to understand
+* **3:** Understandable
+* **4:** Clear and easy to understand
+* **5:** Extremely clear
 
 ---
 
 ## Overall Score
 
-Calculate an overall score from the four evaluation criteria.
+Calculate the overall score by taking the average of the four evaluation criteria.
 
 Example:
 
 ```text
-Humor:       6
-Originality: 8
-Delivery:    5
-Clarity:     9
+Humor:        3
+Originality:  4
+Delivery:     3
+Clarity:      4
 ----------------
-Overall:     7
+Overall:      3.5
 ```
+
+---
+
+## Quality Threshold
 
 The agent should use the **overall score** to determine whether the joke needs improvement.
 
-### Quality Threshold
-
 ```text
-IF overall score >= 7
+IF overall score >= 3.5
     → END
 
-IF overall score < 7
+IF overall score < 3.5
     → IMPROVE JOKE
     → EVALUATE AGAIN
 ```
@@ -136,20 +146,20 @@ Because he used up all his cache."
 
 The evaluator should:
 
-- Analyze the joke
-- Score each criterion from 1–10
-- Calculate an overall score
-- Provide feedback explaining weaknesses
+* Analyze the joke
+* Score each criterion from **1–5**
+* Calculate an overall score
+* Provide feedback explaining weaknesses
 
 Example output:
 
 ```json
 {
-  "humor": 6,
-  "originality": 8,
-  "delivery": 5,
-  "clarity": 9,
-  "feedback": "The joke is clear and has a decent technical pun, but the punchline could be more unexpected."
+  "humor": 3,
+  "originality": 4,
+  "delivery": 3,
+  "clarity": 5,
+  "feedback": "The joke is clear and uses a relevant technical pun, but the punchline is fairly predictable. It could be made more unexpected."
 }
 ```
 
@@ -158,13 +168,13 @@ Example output:
 After evaluation, determine whether the joke is good enough.
 
 ```text
-overallScore >= 7
+overallScore >= 3.5
         │
    ┌────┴────┐
    │         │
   YES        NO
    │         │
-  END     Improve
+  END      Improve
              │
              ▼
           Evaluate
@@ -172,12 +182,12 @@ overallScore >= 7
 
 ### 4. Improver Node
 
-If the joke scores below 7, the improver should:
+If the joke scores below **3.5**, the improver should:
 
-- Read the original joke
-- Read the evaluator's feedback
-- Rewrite the joke
-- Produce an improved version
+* Read the current joke
+* Read the evaluator's feedback
+* Rewrite the joke
+* Produce an improved version
 
 ### 5. Loop
 
@@ -186,8 +196,70 @@ The improved joke should be sent back to the evaluator.
 The process continues until:
 
 ```text
-overallScore >= 7
+overallScore >= 3.5
 ```
+
+**OR the maximum number of improvement attempts is reached.**
+
+---
+
+## Maximum Improvement Attempts
+
+To prevent the agent from looping indefinitely, the agent should have a maximum of **2 improvement attempts**.
+
+```text
+Maximum attempts = 2
+
+IF overall score >= 3.5
+    → END
+
+IF attempts >= 2
+    → END
+
+OTHERWISE
+    → Improve
+    → Evaluate again
+```
+
+This means the agent gets **two opportunities to improve the joke**.
+
+For example:
+
+```text
+                 START
+                   │
+                   ▼
+              Evaluate
+                   │
+             Score < 3.5?
+              /         \
+            NO           YES
+            │             │
+            ▼             ▼
+           END        Improve #1
+                          │
+                          ▼
+                      Evaluate
+                          │
+                    Score < 3.5?
+                     /         \
+                   NO           YES
+                   │             │
+                   ▼             ▼
+                  END        Improve #2
+                                │
+                                ▼
+                            Evaluate
+                                │
+                         ┌──────┴──────┐
+                         │             │
+                    Score ≥ 3.5    Score < 3.5
+                         │             │
+                         ▼             ▼
+                        END           END
+```
+
+If the joke still scores below **3.5 after the second improvement**, the agent stops rather than continuing indefinitely.
 
 ---
 
@@ -202,11 +274,13 @@ START
 Evaluate Joke
   │
   ▼
-Check Score
+Check Score & Attempts
   │
-  ├─────────────── Score >= 7 ──────────────► END
+  ├──────── Score >= 3.5 ──────────────► END
   │
-  │ Score < 7
+  ├──────── Attempts >= 2 ────────────► END
+  │
+  │ Score < 3.5 AND Attempts < 2
   ▼
 Improve Joke
   │
@@ -229,18 +303,17 @@ Try to determine:
 - How will you prevent the agent from looping indefinitely?
 
 ### Bonus Challenge
-
 Add a maximum number of improvement attempts.
 
 For example:
 
 ```text
-Maximum attempts = 5
+Maximum improvement attempts = 2
 
-IF score >= 7
+IF score >= 3.5
     → END
 
-IF attempts >= 5
+IF attempts >= 2
     → END
 
 OTHERWISE
