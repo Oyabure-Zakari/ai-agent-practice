@@ -48,6 +48,7 @@
 
 import { ChatGroq } from "@langchain/groq";
 import {
+  StateGraph,
   StateSchema,
   type ConditionalEdgeRouter,
   type GraphNode,
@@ -174,3 +175,27 @@ const checkJokeQuality: ConditionalEdgeRouter<{
   if (state.jokeOverallScore >= 7) return "Pass";
   return "Fail";
 };
+
+// Build the graph workflow
+const graph = new StateGraph(State)
+  // Add nodes to the graph
+  .addNode("Evaluate Joke", evaluateJoke)
+  .addNode("Improve Joke", improveJoke)
+  // Start the graph with the Evaluate Joke node
+  .addEdge("__start__", "Evaluate Joke")
+  // Add conditional edges based on the joke's quality
+  .addConditionalEdges("Evaluate Joke", checkJokeQuality, {
+    Pass: "__end__",
+    Fail: "Improve Joke",
+  })
+  // Add edge from Improve Joke back to Evaluate Joke to create a loop for re-evaluation
+  .addEdge("Improve Joke", "Evaluate Joke")
+  // Compile the graph to finalize its structure and prepare it for execution
+  .compile();
+
+// Execute the graph with an initial joke
+const result = await graph.invoke({
+  joke: "Why did the scarecrow win an award? Because he was outstanding in his field!",
+});
+
+console.log("Result:", result);
