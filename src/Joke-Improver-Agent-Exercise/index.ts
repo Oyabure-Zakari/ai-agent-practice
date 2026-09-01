@@ -47,34 +47,41 @@
  */
 
 import { ChatGroq } from "@langchain/groq";
-import { StateSchema, type GraphNode } from "@langchain/langgraph";
+import {
+  StateSchema,
+  type ConditionalEdgeRouter,
+  type GraphNode,
+} from "@langchain/langgraph";
 import "dotenv/config";
 import * as z from "zod";
 
-  // Shared variables
-  const model = "openai/gpt-oss-120b";
-  const apiKey = process.env.GROQ_API_KEY || "";
-  
-  // Set up the LLM
-  const jokeEvaluatorLLm = new ChatGroq({ 
-    model, 
-    apiKey,
-    maxTokens: 400, 
-    temperature: 0, // 0 means the model will be deterministic and less creative.
-  });
+// Shared variables
+const model = "openai/gpt-oss-120b";
+const apiKey = process.env.GROQ_API_KEY || "";
 
-    const jokeImproverLLm = new ChatGroq({ 
-    model, 
-    apiKey,
-    temperature: 1, // 1 means the model will be more creative.
-    maxTokens: 800, 
-  });
+// Set up the LLM
+const jokeEvaluatorLLm = new ChatGroq({
+  model,
+  apiKey,
+  maxTokens: 400,
+  temperature: 0, // 0 means the model will be deterministic and less creative.
+});
 
-  // Initialize the state schema for the graph
-  const State = new StateSchema({
+const jokeImproverLLm = new ChatGroq({
+  model,
+  apiKey,
+  temperature: 1, // 1 means the model will be more creative.
+  maxTokens: 800,
+});
+
+// Initialize the state schema for the graph
+const State = new StateSchema({
   joke: z.string().describe("The current joke"),
   // Optional fields because they are not present at the start of the graph, but will be added later
-  jokeOverallScore: z.number().optional().describe("The overall score of the joke"),
+  jokeOverallScore: z
+    .number()
+    .optional()
+    .describe("The overall score of the joke"),
   jokeFeedback: z.string().optional().describe("The evaluator's feedback"),
   improvedJoke: z.string().optional().describe("The improved joke"),
 });
@@ -89,13 +96,15 @@ const jokeEvaluationSchema = z.object({
 });
 
 // Add the output structure to the LLM
-const structuredJokeEvaluatorLLm = jokeEvaluatorLLm.withStructuredOutput(jokeEvaluationSchema);
+const structuredJokeEvaluatorLLm =
+  jokeEvaluatorLLm.withStructuredOutput(jokeEvaluationSchema);
 
-// Create nodes
-// Node to evaluate the joke
+// Define node functions
+// LLM call to evaluate the joke
 const evaluateJoke: GraphNode<typeof State> = async (state) => {
-  const response = await structuredJokeEvaluatorLLm.invoke(
-    `
+  try {
+    const response = await structuredJokeEvaluatorLLm.invoke(
+      `
     You are a joke evaluator, evaluate this joke:${state.joke} based on the following four criteria:
     1. Humor — How funny is the joke?
     2. Originality — How creative, fresh, or unexpected is the joke?
@@ -113,38 +122,55 @@ const evaluateJoke: GraphNode<typeof State> = async (state) => {
     4 to 6: Average
     7 to 8: Good
     9 to 10: Excellent
-    `
-  );
-  const { humor, originality, delivery, clarity, feedback } = response;
+    `,
+    );
+    const { humor, originality, delivery, clarity, feedback } = response;
 
-  const overallScore = (humor + originality + delivery + clarity) / 4;
-  // console.log("Response:",response, "", "Overall score:",overallScore);
-  return { 
-    jokeFeedback: feedback,
-    jokeOverallScore: overallScore
-  };
+    const overallScore = (humor + originality + delivery + clarity) / 4;
+    // console.log("Response:",response, "", "Overall score:",overallScore);
+    return {
+      jokeFeedback: feedback,
+      jokeOverallScore: overallScore,
+    };
+  } catch (error: any) {
+    throw new Error(`Error evaluating joke: ${error.message}`);
+  }
 };
 
-// Node to improve the joke
+// LLM call to evaluate the joke
 const improveJoke: GraphNode<typeof State> = async (state) => {
-  const response = await jokeImproverLLm.invoke(
-    `
-    You are a joke improver, your task is to improve this joke: ${state.joke}.
+  try {
+    const response = await jokeImproverLLm.invoke(
+      `
+      You are a joke improver, your task is to improve this joke: ${state.joke}.
 
-    ### Follow these steps:
-    1. Read and understand the original joke.
-    2. Read and understand the ${state.jokeFeedback} and ${state.jokeOverallScore}.
-    3. Produce a new, improved version of the joke.
-    6. Preserve the original joke's core idea where possible, but improve its humor, originality, clarity, and delivery.
+      ### Follow these steps:
+      1. Read and understand the original joke.
+      2. Read and understand the ${state.jokeFeedback} and ${state.jokeOverallScore}.
+      3. Produce a new, improved version of the joke.
+      4. Preserve the original joke's core idea where possible, but improve its humor, originality, clarity, and delivery.
 
-    Return **only the improved joke**. It should be plain text no fancy format and do not include explanations, analysis, feedback, or the original joke.
-    `
-  );
-  // console.log("Joke Improver:",response.content);
-  return { 
-    improvedJoke: String(response.content)
-  };
+      Return **only the improved joke**. It should be plain text no fancy format and do not include explanations, analysis, feedback, or the  original joke.
+      `,
+    );
+    // console.log("Joke Improver:",response.content);
+    return {
+      improvedJoke: String(response.content),
+    };
+  } catch (error: any) {
+    throw new Error(`Error improving joke: ${error.message}`);
+  }
 };
 
-
-
+// Gate function to check if the joke is good enough to stop the loop or if it needs to be improved
+const checkJokeQuality: ConditionalEdgeRouter<{
+  InputSchema: typeof State;
+  Nodes: "Pass" | "Fail";
+}> = (state) => {
+  if (state.jokeOverallScore === undefined)
+    throw new Error(
+      "jokeOverallScore is undefined. Ensure that the joke has been evaluated before checking its quality.",
+    );
+  if (state.jokeOverallScore >= 7) return "Pass";
+  return "Fail";
+};
