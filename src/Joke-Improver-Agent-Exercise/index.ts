@@ -33,16 +33,9 @@ const jokeImproverLLm = new ChatGroq({
 // Initialize the state schema for the graph
 const State = new StateSchema({
   joke: z.string().describe("The current joke"),
-  attempts: z
-    .number()
-    .default(0)
-    .describe("The number of attempts made to improve the joke"),
-  jokeOverallScore: z
-    .number()
-    .default(0)
-    .describe("The overall score of the joke"),
+  attempts: z.number().default(0).describe("The number of attempts made to improve the joke"),
+  jokeOverallScore: z.number().default(0).describe("The overall score of the joke"),
   jokeFeedback: z.string().describe("The evaluator's feedback"),
-  improvedJoke: z.string().describe("The improved joke"),
 });
 
 // Structure the LLM's output
@@ -55,8 +48,7 @@ const jokeEvaluationSchema = z.object({
 });
 
 // Add the output structure to the LLM
-const structuredJokeEvaluatorLLm =
-  jokeEvaluatorLLm.withStructuredOutput(jokeEvaluationSchema);
+const structuredJokeEvaluatorLLm = jokeEvaluatorLLm.withStructuredOutput(jokeEvaluationSchema);
 
 // Define node functions
 // LLM call to evaluate the joke
@@ -68,7 +60,7 @@ const evaluateJoke: GraphNode<typeof State> = async (state) => {
     overallScore: state.jokeOverallScore,
   };
 
-  console.log("Meta data:", metaDate);
+  console.log(metaDate);
   try {
     const response = await structuredJokeEvaluatorLLm.invoke(
       `
@@ -92,7 +84,6 @@ const evaluateJoke: GraphNode<typeof State> = async (state) => {
     `,
     );
     const { humor, originality, delivery, clarity, feedback } = response;
-
     const overallScore = (humor + originality + delivery + clarity) / 4;
     // console.log("Response:",response, "", "Overall score:",overallScore);
     return {
@@ -122,10 +113,10 @@ const improveJoke: GraphNode<typeof State> = async (state) => {
       `,
     );
     // console.log("Joke Improver:",response.content);
+    const improvedJoke = String(response.content);
     return {
+      joke: improvedJoke,
       attempts: state.attempts + 1,
-      joke: String(response.content),
-      improvedJoke: String(response.content),
     };
   } catch (error: any) {
     throw new Error(`Error improving joke: ${error.message}`);
@@ -148,7 +139,8 @@ const checkJokeQuality: ConditionalEdgeRouter<{
 // Build the graph workflow
 const graph = new StateGraph(State)
   // Add nodes to the graph
-  .addNode("Evaluate Joke", evaluateJoke, { cachePolicy: { ttl: 300 } }) // Cache the evaluation result for 5 minutes to avoid redundant evaluations
+  // Cache the evaluation result for 5 minutes to avoid redundant evaluations
+  .addNode("Evaluate Joke", evaluateJoke, { cachePolicy: { ttl: 300 } })
   .addNode("Improve Joke", improveJoke, { cachePolicy: { ttl: 300 } })
   // Start the graph with the Evaluate Joke node
   .addEdge("__start__", "Evaluate Joke")
