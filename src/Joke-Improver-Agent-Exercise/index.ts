@@ -90,8 +90,8 @@ const evaluateJoke: GraphNode<typeof State> = async (state) => {
       jokeFeedback: feedback,
       jokeOverallScore: overallScore,
     };
-  } catch (error: any) {
-    throw new Error(`Error evaluating joke: ${error.message}`);
+  } catch (error: unknown) {
+    throw new Error(`Error evaluating joke: ${(error as Error).message}`);
   }
 };
 
@@ -118,8 +118,8 @@ const improveJoke: GraphNode<typeof State> = async (state) => {
       joke: improvedJoke,
       attempts: state.attempts + 1,
     };
-  } catch (error: any) {
-    throw new Error(`Error improving joke: ${error.message}`);
+  } catch (error: unknown) {
+    throw new Error(`Error improving joke: ${(error as Error).message}`);
   }
 };
 
