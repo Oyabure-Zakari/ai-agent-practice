@@ -46,6 +46,7 @@
           → Improve → Evaluate again
  */
 
+import { InMemoryCache } from "@langchain/langgraph-checkpoint";
 import { ChatGroq } from "@langchain/groq";
 import {
   StateGraph,
@@ -57,14 +58,16 @@ import "dotenv/config";
 import * as z from "zod";
 
 // Shared variables
+const joke = "Knock knock. Who's there? The mail man.";
 const model = "openai/gpt-oss-120b";
+const maxTokens = 1000;
 const apiKey = process.env.GROQ_API_KEY || "";
 
 // Set up the LLM
 const jokeEvaluatorLLm = new ChatGroq({
   model,
   apiKey,
-  maxTokens: 400,
+  maxTokens,
   temperature: 0, // 0 means the model will be deterministic and less creative.
 });
 
@@ -72,7 +75,7 @@ const jokeImproverLLm = new ChatGroq({
   model,
   apiKey,
   temperature: 1, // 1 means the model will be more creative.
-  maxTokens: 800,
+  maxTokens,
 });
 
 // Initialize the state schema for the graph
@@ -103,6 +106,7 @@ const structuredJokeEvaluatorLLm =
 // Define node functions
 // LLM call to evaluate the joke
 const evaluateJoke: GraphNode<typeof State> = async (state) => {
+  console.log("Evaluating joke........");
   try {
     const response = await structuredJokeEvaluatorLLm.invoke(
       `
@@ -140,6 +144,7 @@ const evaluateJoke: GraphNode<typeof State> = async (state) => {
 
 // LLM call to evaluate the joke
 const improveJoke: GraphNode<typeof State> = async (state) => {
+  console.log("Improving joke........");
   try {
     const response = await jokeImproverLLm.invoke(
       `
@@ -179,8 +184,8 @@ const checkJokeQuality: ConditionalEdgeRouter<{
 // Build the graph workflow
 const graph = new StateGraph(State)
   // Add nodes to the graph
-  .addNode("Evaluate Joke", evaluateJoke)
-  .addNode("Improve Joke", improveJoke)
+  .addNode("Evaluate Joke", evaluateJoke, { cachePolicy: { ttl: 300 } }) // Cache the evaluation result for 5 minutes to avoid redundant evaluations
+  .addNode("Improve Joke", improveJoke, { cachePolicy: { ttl: 300 } })
   // Start the graph with the Evaluate Joke node
   .addEdge("__start__", "Evaluate Joke")
   // Add conditional edges based on the joke's quality
@@ -191,11 +196,18 @@ const graph = new StateGraph(State)
   // Add edge from Improve Joke back to Evaluate Joke to create a loop for re-evaluation
   .addEdge("Improve Joke", "Evaluate Joke")
   // Compile the graph to finalize its structure and prepare it for execution
-  .compile();
+  .compile({ cache: new InMemoryCache() }); // Use an in-memory cache to store intermediate results and avoid redundant computations
 
 // Execute the graph with an initial joke
-const result = await graph.invoke({
-  joke: "Why did the scarecrow win an award? Because he was outstanding in his field!",
-});
+// Test to see if the caching works by invoking the graph twice with the same joke input
+console.log("================= First Call =================");
+console.time("First call");
+const result1 = await graph.invoke({ joke });
+console.log("Result 1:", result1);
+console.timeEnd("First call");
 
-console.log("Result:", result);
+console.log("\n\n================= Second Call =================");
+console.time("Second call");
+const result2 = await graph.invoke({ joke });
+console.log("Result 2 (Cached):", result2);
+console.timeEnd("Second call");
