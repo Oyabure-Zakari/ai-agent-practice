@@ -58,10 +58,10 @@ import "dotenv/config";
 import * as z from "zod";
 
 // Shared variables
-const joke = "Knock knock. Who's there? The mail man.";
 const model = "openai/gpt-oss-120b";
 const maxTokens = 1000;
 const apiKey = process.env.GROQ_API_KEY || "";
+const joke = "Why is the sky blue? because it is sad.";
 
 // Set up the LLM
 const jokeEvaluatorLLm = new ChatGroq({
@@ -81,21 +81,24 @@ const jokeImproverLLm = new ChatGroq({
 // Initialize the state schema for the graph
 const State = new StateSchema({
   joke: z.string().describe("The current joke"),
-  // Optional fields because they are not present at the start of the graph, but will be added later
+  attempts: z
+    .number()
+    .default(0)
+    .describe("The number of attempts made to improve the joke"),
   jokeOverallScore: z
     .number()
-    .optional()
+    .default(0)
     .describe("The overall score of the joke"),
-  jokeFeedback: z.string().optional().describe("The evaluator's feedback"),
-  improvedJoke: z.string().optional().describe("The improved joke"),
+  jokeFeedback: z.string().describe("The evaluator's feedback"),
+  improvedJoke: z.string().describe("The improved joke"),
 });
 
 // Structure the LLM's output
 const jokeEvaluationSchema = z.object({
-  humor: z.number().min(1).max(10),
-  originality: z.number().min(1).max(10),
-  delivery: z.number().min(1).max(10),
-  clarity: z.number().min(1).max(10),
+  humor: z.number().min(1).max(5),
+  originality: z.number().min(1).max(5),
+  delivery: z.number().min(1).max(5),
+  clarity: z.number().min(1).max(5),
   feedback: z.string(),
 });
 
@@ -107,6 +110,13 @@ const structuredJokeEvaluatorLLm =
 // LLM call to evaluate the joke
 const evaluateJoke: GraphNode<typeof State> = async (state) => {
   console.log("Evaluating joke........");
+  const metaDate = {
+    joke: state.joke,
+    attempts: state.attempts,
+    overallScore: state.jokeOverallScore,
+  };
+
+  console.log("Meta data:", metaDate);
   try {
     const response = await structuredJokeEvaluatorLLm.invoke(
       `
@@ -117,7 +127,7 @@ const evaluateJoke: GraphNode<typeof State> = async (state) => {
     4. Clarity — How easy is the joke to understand?
 
     ### Instructions
-    1. Score each criterion from 1 to 10.
+    1. Score each criterion from 1 to 5.
     2. Provide concise feedback explaining the joke's weaknesses and what could be improved.
     3. If the joke is already strong, explain briefly why it works.
     4. Be objective and consistent when scoring.
@@ -161,6 +171,8 @@ const improveJoke: GraphNode<typeof State> = async (state) => {
     );
     // console.log("Joke Improver:",response.content);
     return {
+      attempts: state.attempts + 1,
+      joke: String(response.content),
       improvedJoke: String(response.content),
     };
   } catch (error: any) {
@@ -173,11 +185,11 @@ const checkJokeQuality: ConditionalEdgeRouter<{
   InputSchema: typeof State;
   Nodes: "Pass" | "Fail";
 }> = (state) => {
-  if (state.jokeOverallScore === undefined)
-    throw new Error(
-      "jokeOverallScore is undefined. Ensure that the joke has been evaluated before checking its quality.",
-    );
-  if (state.jokeOverallScore >= 7) return "Pass";
+  // Condition 1: Joke is good enough
+  if (state.jokeOverallScore >= 3.5) return "Pass";
+  // Condition 2: Maximum improvements reached
+  if (state.attempts >= 2) return "Pass";
+  // Otherwise, improve the joke
   return "Fail";
 };
 
