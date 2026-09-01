@@ -128,8 +128,8 @@ const checkJokeQuality: ConditionalEdgeRouter<{
   InputSchema: typeof State;
   Nodes: "Pass" | "Fail";
 }> = (state) => {
+  if (state.attempts === 2) return "Pass"; // If the joke has been improved twice, stop the loop
   if (state.jokeOverallScore >= 3.5) return "Pass"; // Is the Joke good enough
-  if (state.attempts >= 2) return "Pass"; // If the joke has been improved twice, stop the loop
   // Otherwise, improve the joke
   return "Fail";
 };
