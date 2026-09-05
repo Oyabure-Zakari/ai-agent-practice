@@ -75,16 +75,9 @@ const evaluateJoke: GraphNode<typeof State> = async (state) => {
     2. Provide concise feedback explaining the joke's weaknesses and what could be improved.
     3. If the joke is already strong, explain briefly why it works.
     4. Be objective and consistent when scoring.
-
-    ### Scoring Guidelines
-    1 to 2: Poor
-    2.5 to 3: Average
-    3.5 to 4: Good
-    4.5 to 5: Excellent
     `,
     );
     const { humor, originality, delivery, clarity, feedback } = response;
-    // Calculate the overall score as the average of the four criteria
     const overallScore = (humor + originality + delivery + clarity) / 4;
     // console.log("Response:",response, "", "Overall score:",overallScore);
     return {
@@ -131,7 +124,8 @@ const checkJokeQuality: ConditionalEdgeRouter<{
 }> = (state) => {
   if (state.attempts === 2) return "Pass"; // If the joke has been improved twice, stop the loop
   if (state.jokeOverallScore >= 3.5) return "Pass"; // Is the Joke good enough
-  return "Fail"; // Otherwise, improve the joke
+  // Otherwise, improve the joke
+  return "Fail";
 };
 
 // Build the graph workflow
