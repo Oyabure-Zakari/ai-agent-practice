@@ -15,7 +15,7 @@ const model = "openai/gpt-oss-120b";
 const maxTokens = 1000;
 const apiKey = process.env.GROQ_API_KEY || "";
 const joke = "Why is the sky blue? because it is sad.";
-const recursionLimit = 5;
+const recursionLimit = 6;
 
 // Set up the LLM
 const jokeEvaluatorLLm = new ChatGroq({
@@ -91,7 +91,7 @@ const evaluateJoke: GraphNode<typeof State> = async (state) => {
   }
 };
 
-// LLM call to evaluate the joke
+// LLM call to improve the joke
 const improveJoke: GraphNode<typeof State> = async (state) => {
   console.log("Improving joke........");
   try {
