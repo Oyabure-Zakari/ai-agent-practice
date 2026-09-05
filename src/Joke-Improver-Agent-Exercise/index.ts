@@ -1,6 +1,7 @@
 import { InMemoryCache } from "@langchain/langgraph-checkpoint";
 import { ChatGroq } from "@langchain/groq";
 import {
+  GraphRecursionError,
   StateGraph,
   StateSchema,
   type ConditionalEdgeRouter,
@@ -14,6 +15,7 @@ const model = "openai/gpt-oss-120b";
 const maxTokens = 1000;
 const apiKey = process.env.GROQ_API_KEY || "";
 const joke = "Why is the sky blue? because it is sad.";
+const recursionLimit = 5;
 
 // Set up the LLM
 const jokeEvaluatorLLm = new ChatGroq({
@@ -150,12 +152,28 @@ const graph = new StateGraph(State)
 // Test to see if the caching works by invoking the graph twice with the same joke input
 console.log("================= First Call =================");
 console.time("First call");
-const result1 = await graph.invoke({ joke });
-console.log("Result 1:", result1);
+try {
+  const result1 = await graph.invoke({ joke }, { recursionLimit });
+  console.log("Result 1:", result1);
+} catch (error: unknown) {
+  if (error instanceof GraphRecursionError) {
+    console.log("The graph ran for too long and was stopped.");
+  } else {
+    throw (error as Error).message;
+  }
+}
 console.timeEnd("First call");
 
 console.log("\n\n================= Second Call =================");
 console.time("Second call");
-const result2 = await graph.invoke({ joke });
-console.log("Result 2 (Cached):", result2);
+try {
+  const result2 = await graph.invoke({ joke }, { recursionLimit });
+  console.log("Result 2:", result2);
+} catch (error: unknown) {
+  if (error instanceof GraphRecursionError) {
+    console.log("The graph ran for too long and was stopped.");
+  } else {
+    throw (error as Error).message;
+  }
+}
 console.timeEnd("Second call");
