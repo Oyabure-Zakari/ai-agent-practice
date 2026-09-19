@@ -17,18 +17,18 @@ const weatherLLm = new ChatGroq({
   temperature: 0, // 0 means the model will be deterministic and less creative.
 });
 
-const weatherPrompt = `You are a weather agent. Your task is to extract the location from the user's input and fetch the weather data for that location. If the input has nothing to do with weather, respond normally.`;
+const systemPrompt = `You are a weather agent. Your task is to extract the location from the user's input and fetch the weather data for that location. If the input has nothing to do with weather, respond normally.`;
 
-const userInput = "What is the weather in Abuja?";
+const userPrompt = "What is the weather in Abuja?";
 
 const response = await weatherLLm.invoke([
   {
     role: "system",
-    content: weatherPrompt,
+    content: systemPrompt,
   },
   {
     role: "user",
-    content: userInput,
+    content: userPrompt,
   },
 ]);
 
