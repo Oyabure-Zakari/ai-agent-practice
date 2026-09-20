@@ -58,10 +58,19 @@ const weatherTool = tool(
     return await getCurrentWeatherData(location);
   },
   {
-    name: "Weather Tool",
+    name: "Weather_Tool",
     description: "Get the current weather information for a given location.",
     schema: z.object({
       location: z.string().describe("The location to get the current weather for."),
     }),
   },
 );
+
+// Bind the LLM with tools
+const llmWithTools = llm.bindTools([weatherTool]);
+
+// Invoke the LLM with input that triggers the tool call
+const msg = await llmWithTools.invoke("What is the weather in Toronto?");
+
+// Get the tool call
+console.log(msg.tool_calls);
