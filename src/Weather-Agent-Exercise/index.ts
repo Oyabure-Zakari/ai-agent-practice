@@ -17,7 +17,14 @@ const weatherUrl = (location: string) =>
 
 // Define the state schema for messages i.e the conversations
 const State = new StateSchema({
-  messages: MessagesValue, // An array of messages btw the user and the agent e.g [{role: "user", content: "How is the weather in Abuja?"}, {role: "assistant", content: "The weather in Abuja is currently sunny."}]
+  messages: MessagesValue, // An array of messages btw the user and the agent
+  /* e.g [
+    {role: "user", content: "How are you doing, today?"}, 
+    {role: "assistant", content: "I am doing fine."},
+    {role: "user", content: "How is the weather in Abuja?"}, 
+    {role: "assistant", content: "The weather in Abuja is currently sunny."}
+  ]
+  */
 });
 
 // Set up the LLM
@@ -25,5 +32,5 @@ const llm = new ChatGroq({
   model: "openai/gpt-oss-120b",
   apiKey: process.env.GROQ_API_KEY as string,
   maxTokens: 1000,
-  temperature: 0, // 0 means the model will be deterministic and less creative.
+  temperature: 0,
 });
