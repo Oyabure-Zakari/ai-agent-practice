@@ -14,7 +14,7 @@ import { InMemoryCache } from "@langchain/langgraph-checkpoint";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 
 // Global variables
-const userPrompt = "What will be the weather condition in Houston?";
+const userPrompt = "What is the weather in Abuja?";
 const systemPrompt = `
   ROLE: 
   You are a weather assistant.
@@ -90,6 +90,7 @@ const getCurrentWeatherData = async (location: string) => {
 // Define a tool
 const weatherTool = tool(
   async ({ location }) => {
+    console.log("Calling tool.......");
     return await getCurrentWeatherData(location);
   },
   {
@@ -107,6 +108,7 @@ const llmWithTools = llm.bindTools([weatherTool]);
 // Nodes
 // This node calls the llm which decides whether to call a tool or not.
 const llmCall: GraphNode<typeof State> = async (state) => {
+  console.log("Calling LLm.......");
   const response = await llmWithTools.invoke([new SystemMessage(systemPrompt), ...state.messages]);
   return {
     messages: [response],
@@ -121,9 +123,13 @@ const shouldContinue: ConditionalEdgeRouter<{ InputSchema: typeof State; Nodes: 
 ) => {
   const messages = state.messages;
   const lastMessage = messages.at(-1);
-
+  // This check makes sure the last message exists and is an AIMessage before checking for tool calls.
+  // If it's not included, the code could try to access tool_calls on a missing or non-AI message, which can cause errors.
+  if (!lastMessage || !AIMessage.isInstance(lastMessage)) {
+    return "__end__";
+  }
   // If the LLM makes a tool call, then perform an action
-  if (lastMessage instanceof AIMessage && lastMessage.tool_calls?.length) {
+  if (lastMessage.tool_calls?.length) {
     return "toolNode";
   }
   // Otherwise, we stop (reply to the user)
@@ -143,5 +149,4 @@ const graph = new StateGraph(State)
 const response = await graph.invoke({
   messages: [new HumanMessage(userPrompt)],
 });
-
 console.log(response.messages.at(-1)?.content);
