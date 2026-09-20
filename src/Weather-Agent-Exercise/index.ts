@@ -89,7 +89,7 @@ const llmCall: GraphNode<typeof State> = async (state) => {
     messages: [response],
   };
 };
-// The tool node is used to call the tools and return the results.
+// This is used to call the tools and return the results.
 const toolNode = new ToolNode([weatherTool]);
 
 // Build the graph
