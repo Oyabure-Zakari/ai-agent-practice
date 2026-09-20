@@ -146,7 +146,27 @@ const graph = new StateGraph(State)
   .compile({ cache: new InMemoryCache() });
 
 // Run the graph
-const response = await graph.invoke({
-  messages: [new HumanMessage(userPrompt)],
-});
-console.log(response.messages.at(-1)?.content);
+// Test to see if the caching works by invoking the graph twice with the same user input
+console.log("================= First Call =================");
+console.time("First call");
+try {
+  const firstCall = await graph.invoke({
+    messages: [new HumanMessage(userPrompt)],
+  });
+  console.log(firstCall.messages.at(-1)?.content);
+} catch (error) {
+  throw new Error(`Error running graph: ${(error as Error).message}`);
+}
+console.timeEnd("First call");
+
+console.log("\n\n================= Second Call =================");
+console.time("Second call");
+try {
+  const secondCall = await graph.invoke({
+    messages: [new HumanMessage(userPrompt)],
+  });
+  console.log(secondCall.messages.at(-1)?.content);
+} catch (error) {
+  throw new Error(`Error running graph: ${(error as Error).message}`);
+}
+console.timeEnd("Second call");
