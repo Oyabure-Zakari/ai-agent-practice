@@ -1,35 +1,29 @@
-/*
-- Track the user's input e.g. "What is the weather in Abuja?"
-- If the input has nothing to do with weather, allow the llm to respond normally.
-- Else take the user's input and extracts the location (e.g. "Abuja") from it.
-- Use the extracted location to fetch the weather data from a weather API.
-- Return the weather data to the user in a readable format.
-*/
-
 import { ChatGroq } from "@langchain/groq";
 import "dotenv/config";
+import { MessagesValue, StateSchema } from "@langchain/langgraph";
+
+// Global variables
+const userPrompt = "How is the weather in Abuja?";
+const systemPrompt = `
+  You are a weather agent that can answer weather-related questions.
+  For example, the user should be able to ask: 
+  What's the weather in Abuja?
+
+  Your response, should be something like this:
+  The weather in Abuja is currently sunny.
+`;
+const weatherUrl = (location: string) =>
+  `http://api.weatherapi.com/v1/current.json?key=${process.env.WEATHERAPI_API_KEY}&q=${location}&aqi=no`;
+
+// Define the state schema for messages i.e the conversations
+const State = new StateSchema({
+  messages: MessagesValue, // An array of messages btw the user and the agent e.g [{role: "user", content: "How is the weather in Abuja?"}, {role: "assistant", content: "The weather in Abuja is currently sunny."}]
+});
 
 // Set up the LLM
-const weatherLLm = new ChatGroq({
+const llm = new ChatGroq({
   model: "openai/gpt-oss-120b",
-  apiKey: process.env.GROQ_API_KEY || "",
+  apiKey: process.env.GROQ_API_KEY as string,
   maxTokens: 1000,
   temperature: 0, // 0 means the model will be deterministic and less creative.
 });
-
-const systemPrompt = `You are a weather agent. Your task is to extract the location from the user's input and fetch the weather data for that location. If the input has nothing to do with weather, respond normally.`;
-
-const userPrompt = "What is the weather in Abuja?";
-
-const response = await weatherLLm.invoke([
-  {
-    role: "system",
-    content: systemPrompt,
-  },
-  {
-    role: "user",
-    content: userPrompt,
-  },
-]);
-
-console.log("Weather Agent Response: ", response.content);
