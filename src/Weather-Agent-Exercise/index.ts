@@ -1,6 +1,8 @@
 import { ChatGroq } from "@langchain/groq";
 import "dotenv/config";
 import { MessagesValue, StateSchema } from "@langchain/langgraph";
+import { tool } from "@langchain/core/tools";
+import * as z from "zod";
 
 // Global variables
 const userPrompt = "How is the weather in Abuja?";
@@ -50,4 +52,16 @@ const getCurrentWeatherData = async (location: string) => {
   }
 };
 
-getCurrentWeatherData("Paris");
+// Define a tool
+const weatherTool = tool(
+  async ({ location }) => {
+    return await getCurrentWeatherData(location);
+  },
+  {
+    name: "Weather Tool",
+    description: "Get the current weather information for a given location.",
+    schema: z.object({
+      location: z.string().describe("The location to get the current weather for."),
+    }),
+  },
+);
