@@ -34,3 +34,20 @@ const llm = new ChatGroq({
   maxTokens: 1000,
   temperature: 0,
 });
+
+// Get the location's current weather data
+const getCurrentWeatherData = async (location: string) => {
+  if (!location) throw new Error("Please provide a location to check the weather.");
+  try {
+    const response = await fetch(weatherUrl(location));
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log(data);
+  } catch (error: unknown) {
+    throw new Error(`Fetch failed: ${(error as Error).message}`);
+  }
+};
+
+getCurrentWeatherData("Paris");
