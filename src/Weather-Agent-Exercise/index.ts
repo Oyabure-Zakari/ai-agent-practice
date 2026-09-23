@@ -45,14 +45,7 @@ const weatherUrl = (location: string) =>
 
 // Define the state schema for messages i.e the conversations
 const State = new StateSchema({
-  messages: MessagesValue, // An array of messages btw the user and the agent
-  /* e.g [
-    {role: "user", content: "How are you doing, today?"}, 
-    {role: "assistant", content: "I am doing fine."},
-    {role: "user", content: "How is the weather in Abuja?"}, 
-    {role: "assistant", content: "The weather in Abuja is currently sunny."}
-  ]
-  */
+  messages: MessagesValue,
 });
 
 // Set up the LLM
