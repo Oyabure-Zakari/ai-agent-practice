@@ -152,14 +152,14 @@ try {
 }
 console.timeEnd("First call");
 
-console.log("\n\n================= Second Call =================");
-console.time("Second call");
-try {
-  const secondCall = await graph.invoke({
-    messages: [new HumanMessage(userPrompt)],
-  });
-  console.log(secondCall.messages.at(-1)?.content);
-} catch (error) {
-  throw new Error(`Error running graph: ${(error as Error).message}`);
-}
-console.timeEnd("Second call");
+// console.log("\n\n================= Second Call =================");
+// console.time("Second call");
+// try {
+//   const secondCall = await graph.invoke({
+//     messages: [new HumanMessage(userPrompt)],
+//   });
+//   console.log(secondCall.messages.at(-1)?.content);
+// } catch (error) {
+//   throw new Error(`Error running graph: ${(error as Error).message}`);
+// }
+// console.timeEnd("Second call");
