@@ -6,10 +6,11 @@ import {
   StateSchema,
   type ConditionalEdgeRouter,
   type GraphNode,
+  type StateType,
 } from "@langchain/langgraph";
 import { tool } from "@langchain/core/tools";
 import * as z from "zod";
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { InMemoryCache } from "@langchain/langgraph-checkpoint";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 
@@ -131,8 +132,44 @@ const shouldContinue: ConditionalEdgeRouter<{ InputSchema: typeof State; Nodes: 
 
 // Build the graph
 const graph = new StateGraph(State)
-  .addNode("llmNode", llmCall, { cachePolicy: { ttl: 300 } })
-  .addNode("toolNode", toolNode, { cachePolicy: { ttl: 300 } })
+.addNode("llmNode", llmCall, {
+  cachePolicy: {
+    ttl: 300,
+
+    // Create a custom cache key based on the node's input. e.g [{"type":"ai","content":"","tool_calls":[{"name":"Weather Tool","args":{"location":"Abuja"}}]}]
+    keyFunc: (input) => {
+      const messages = input[0].messages;
+      const cacheKey = JSON.stringify(
+        messages.map((message) => ({
+          type: message.type,
+          content: message.content,
+          tool_calls: AIMessage.isInstance(message)
+            ? message.tool_calls
+            : undefined,
+        }))
+      );
+      console.log(cacheKey)
+      return cacheKey;
+    },
+  },
+})
+.addNode("toolNode", toolNode, {
+  cachePolicy: {
+    ttl: 300,
+keyFunc: (input) => {
+  const messages = input[0].messages;
+
+  const lastMessage = messages.at(-1);
+
+  const toolCall = lastMessage.tool_calls?.[0];
+
+  return JSON.stringify({
+    name: toolCall.name,
+    location: toolCall.args.location,
+  });
+}
+  },
+})
   .addEdge("__start__", "llmNode")
   .addConditionalEdges("llmNode", shouldContinue, ["toolNode", "__end__"])
   .addEdge("toolNode", "llmNode")
@@ -152,14 +189,14 @@ try {
 }
 console.timeEnd("First call");
 
-// console.log("\n\n================= Second Call =================");
-// console.time("Second call");
-// try {
-//   const secondCall = await graph.invoke({
-//     messages: [new HumanMessage(userPrompt)],
-//   });
-//   console.log(secondCall.messages.at(-1)?.content);
-// } catch (error) {
-//   throw new Error(`Error running graph: ${(error as Error).message}`);
-// }
-// console.timeEnd("Second call");
+console.log("\n\n================= Second Call =================");
+console.time("Second call");
+try {
+  const secondCall = await graph.invoke({
+    messages: [new HumanMessage(userPrompt)],
+  });
+  console.log(secondCall.messages.at(-1)?.content);
+} catch (error) {
+  throw new Error(`Error running graph: ${(error as Error).message}`);
+}
+console.timeEnd("Second call");
