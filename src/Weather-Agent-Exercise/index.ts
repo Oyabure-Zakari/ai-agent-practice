@@ -139,7 +139,7 @@ const graph = new StateGraph(State)
     // Create a custom cache key based on the node's input. e.g [{"type":"ai","content":"","tool_calls":[{"name":"Weather Tool","args":{"location":"Abuja"}}]}]
     keyFunc: (input) => {
       const messages = input[0].messages;
-      const cacheKey = JSON.stringify(
+      return JSON.stringify(
         messages.map((message) => ({
           type: message.type,
           content: message.content,
@@ -148,26 +148,21 @@ const graph = new StateGraph(State)
             : undefined,
         }))
       );
-      console.log(cacheKey)
-      return cacheKey;
     },
   },
 })
 .addNode("toolNode", toolNode, {
   cachePolicy: {
     ttl: 300,
-keyFunc: (input) => {
-  const messages = input[0].messages;
-
-  const lastMessage = messages.at(-1);
-
-  const toolCall = lastMessage.tool_calls?.[0];
-
-  return JSON.stringify({
-    name: toolCall.name,
-    location: toolCall.args.location,
-  });
-}
+    keyFunc: (input) => {
+      const messages = input[0].messages;
+      const lastMessage = messages.at(-1);
+      const toolCall = lastMessage.tool_calls?.[0];
+      return JSON.stringify({
+        name: toolCall.name,
+        location: toolCall.args.location,
+      });
+    }
   },
 })
   .addEdge("__start__", "llmNode")
