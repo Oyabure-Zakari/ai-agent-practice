@@ -132,39 +132,38 @@ const shouldContinue: ConditionalEdgeRouter<{ InputSchema: typeof State; Nodes: 
 
 // Build the graph
 const graph = new StateGraph(State)
-.addNode("llmNode", llmCall, {
-  cachePolicy: {
-    ttl: 300,
+  .addNode("llmNode", llmCall, {
+    cachePolicy: {
+      ttl: 300,
 
-    // Create a custom cache key based on the node's input. e.g [{"type":"ai","content":"","tool_calls":[{"name":"Weather Tool","args":{"location":"Abuja"}}]}]
-    keyFunc: (input) => {
-      const messages = input[0].messages;
-      return JSON.stringify(
-        messages.map((message) => ({
-          type: message.type,
-          content: message.content,
-          tool_calls: AIMessage.isInstance(message)
-            ? message.tool_calls
-            : undefined,
-        }))
-      );
+      // Create a custom cache key e.g [{"type":"ai","content":"","tool_calls":[{"name":"Weather Tool","args":{"location":"Abuja"}}]}]
+      keyFunc: (input) => {
+        const messages = input[0].messages;
+        return JSON.stringify(
+          messages.map((message) => ({
+            type: message.type,
+            content: message.content,
+            tool_calls: AIMessage.isInstance(message) ? message.tool_calls : undefined,
+          })),
+        );
+      },
     },
-  },
-})
-.addNode("toolNode", toolNode, {
-  cachePolicy: {
-    ttl: 300,
-    keyFunc: (input) => {
-      const messages = input[0].messages;
-      const lastMessage = messages.at(-1);
-      const toolCall = lastMessage.tool_calls?.[0];
-      return JSON.stringify({
-        name: toolCall.name,
-        location: toolCall.args.location,
-      });
-    }
-  },
-})
+  })
+  .addNode("toolNode", toolNode, {
+    cachePolicy: {
+      ttl: 300,
+      // Create a custom cache key e.g {"name":"Weather Tool","location":{"location":"Abuja"}
+      keyFunc: (input) => {
+        const messages = input[0].messages;
+        const lastMessage = messages.at(-1);
+        const toolCall = lastMessage.tool_calls?.[0];
+        return JSON.stringify({
+          name: toolCall.name,
+          location: toolCall.args.location,
+        });
+      },
+    },
+  })
   .addEdge("__start__", "llmNode")
   .addConditionalEdges("llmNode", shouldContinue, ["toolNode", "__end__"])
   .addEdge("toolNode", "llmNode")
