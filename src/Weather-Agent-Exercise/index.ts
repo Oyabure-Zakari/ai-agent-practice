@@ -135,17 +135,20 @@ const graph = new StateGraph(State)
   .addNode("llmNode", llmCall, {
     cachePolicy: {
       ttl: 300,
-
       // Create a custom cache key e.g [{"type":"ai","content":"","tool_calls":[{"name":"Weather Tool","args":{"location":"Abuja"}}]}]
       keyFunc: (input) => {
-        const messages = input[0].messages;
-        return JSON.stringify(
-          messages.map((message) => ({
-            type: message.type,
-            content: message.content,
-            tool_calls: AIMessage.isInstance(message) ? message.tool_calls : undefined,
-          })),
-        );
+        try {
+          const messages = (input[0] as { messages: BaseMessage[] }).messages;
+          return JSON.stringify(
+            messages.map((message) => ({
+              type: message.type,
+              content: message.content,
+              tool_calls: AIMessage.isInstance(message) ? message.tool_calls : undefined,
+            })),
+          );
+        } catch (error: unknown) {
+          throw new Error(`Error creating llm cache key: ${(error as Error).message}`);
+        }
       },
     },
   })
@@ -154,13 +157,23 @@ const graph = new StateGraph(State)
       ttl: 300,
       // Create a custom cache key e.g {"name":"Weather Tool","location":{"location":"Abuja"}
       keyFunc: (input) => {
-        const messages = input[0].messages;
-        const lastMessage = messages.at(-1);
-        const toolCall = lastMessage.tool_calls?.[0];
-        return JSON.stringify({
-          name: toolCall.name,
-          location: toolCall.args.location,
-        });
+        try {
+          const messages = (input[0] as { messages: BaseMessage[] }).messages;
+          const lastMessage = messages.at(-1);
+          if (!lastMessage || !AIMessage.isInstance(lastMessage)) {
+            throw new Error("There's no last message or it's not an AI message");
+          }
+          const toolCall = lastMessage.tool_calls?.[0];
+          if (!toolCall) {
+            throw new Error("There's no tool call");
+          }
+          return JSON.stringify({
+            name: toolCall.name,
+            location: toolCall.args.location,
+          });
+        } catch (error: unknown) {
+          throw new Error(`Error creating tool cache key: ${(error as Error).message}`);
+        }
       },
     },
   })
