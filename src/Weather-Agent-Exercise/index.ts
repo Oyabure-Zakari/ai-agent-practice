@@ -143,7 +143,7 @@ const graph = new StateGraph(State)
   .compile({ cache: new InMemoryCache() });
 
 // Run the graph
-// Test to see if the caching works by invoking the graph twice with the same user input
+// Test to see if the caching works by invoking the graph twice with the same input
 console.log("================= User 1 =================");
 console.time("User 1");
 try {
@@ -179,15 +179,3 @@ try {
   throw new Error(`Error running graph: ${(error as Error).message}`);
 }
 console.timeEnd("User 2");
-
-console.log("================= User 2 (Cached) =================");
-console.time("User 2 (Cached)");
-try {
-  const aiAgentResponse = await graph.invoke({
-    messages: [new HumanMessage(user2Prompt)],
-  });
-  console.log(aiAgentResponse.messages.at(-1)?.content);
-} catch (error) {
-  throw new Error(`Error running graph: ${(error as Error).message}`);
-}
-console.timeEnd("User 2 (Cached)");
