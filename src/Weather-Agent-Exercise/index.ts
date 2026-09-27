@@ -13,7 +13,7 @@ import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/
 import { InMemoryCache } from "@langchain/langgraph-checkpoint";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { systemPrompt, user1Prompt, user2Prompt } from "./prompts.js";
-import { todayWeatherUrl, tomorrowWeatherUrl } from "./urls.js";
+import { todayWeatherForecast, tomorrowWeatherForecast } from "./getWeatherInfo.js";
 
 // Define the state schema for messages i.e the conversations
 const State = new StateSchema({
@@ -27,55 +27,6 @@ const llm = new ChatGroq({
   maxTokens: 1000,
   temperature: 0,
 });
-
-// Get the location's current weather data
-const todayWeatherForecast = async (location: string) => {
-  if (!location) throw new Error("Please provide a location to check the weather.");
-  try {
-    const response = await fetch(todayWeatherUrl(location));
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const data = await response.json();
-    return `
-      Weather in ${data.location.name}, ${data.location.country}:
-      Condition: ${data.current.condition.text}
-      Temperature: ${data.current.temp_c}°C (feels like ${data.current.feelslike_c}°C)
-      Chance of rain: ${data.current.chance_of_rain}%
-      Humidity: ${data.current.humidity}%
-      Wind: ${data.current.wind_kph} km/h ${data.current.wind_dir}
-      Visibility: ${data.current.vis_km} km
-      Last updated: ${data.current.last_updated}
-    `;
-  } catch (error: unknown) {
-    throw new Error(`Failed to fetch current weather: ${(error as Error).message}`);
-  }
-};
-
-// Get tomorrow's weather forecast for a location
-const tomorrowWeatherForecast = async (location: string) => {
-  if (!location) throw new Error("Please provide a location to check the weather.");
-  try {
-    const response = await fetch(tomorrowWeatherUrl(location));
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const data = await response.json();
-    const tomorrow = data.forecast.forecastday[1];
-    return `
-      Weather forecast for ${data.location.name}, ${data.location.country}:
-      Date: ${tomorrow.date}
-      Condition: ${tomorrow.day.condition.text}
-      Maximum temperature: ${tomorrow.day.maxtemp_c}°C
-      Minimum temperature: ${tomorrow.day.mintemp_c}°C
-      Chance of rain: ${tomorrow.day.daily_chance_of_rain}%
-      Humidity: ${tomorrow.day.avghumidity}%
-      Maximum wind: ${tomorrow.day.maxwind_kph} km/h
-    `;
-  } catch (error: unknown) {
-    throw new Error(`Failed to fetch weather forecast: ${(error as Error).message}`);
-  }
-};
 
 // Define tools
 const todayWeatherTool = tool(
@@ -217,26 +168,26 @@ try {
 }
 console.timeEnd("User 1 (Cached)");
 
-// console.log("\n\n================= User 2 =================");
-// console.time("User 2");
-// try {
-//   const user2Response = await graph.invoke({
-//     messages: [new HumanMessage(user2Prompt)],
-//   });
-//   console.log(user2Response.messages.at(-1)?.content);
-// } catch (error) {
-//   throw new Error(`Error running graph: ${(error as Error).message}`);
-// }
-// console.timeEnd("User 2");
+console.log("\n\n================= User 2 =================");
+console.time("User 2");
+try {
+  const user2Response = await graph.invoke({
+    messages: [new HumanMessage(user2Prompt)],
+  });
+  console.log(user2Response.messages.at(-1)?.content);
+} catch (error) {
+  throw new Error(`Error running graph: ${(error as Error).message}`);
+}
+console.timeEnd("User 2");
 
-// console.log("================= User 2 (Cached) =================");
-// console.time("User 2 (Cached)");
-// try {
-//   const user2Response = await graph.invoke({
-//     messages: [new HumanMessage(user2Prompt)],
-//   });
-//   console.log(user2Response.messages.at(-1)?.content);
-// } catch (error) {
-//   throw new Error(`Error running graph: ${(error as Error).message}`);
-// }
-// console.timeEnd("User 2 (Cached)");
+console.log("================= User 2 (Cached) =================");
+console.time("User 2 (Cached)");
+try {
+  const user2Response = await graph.invoke({
+    messages: [new HumanMessage(user2Prompt)],
+  });
+  console.log(user2Response.messages.at(-1)?.content);
+} catch (error) {
+  throw new Error(`Error running graph: ${(error as Error).message}`);
+}
+console.timeEnd("User 2 (Cached)");
