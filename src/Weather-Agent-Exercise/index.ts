@@ -80,6 +80,7 @@ const getCurrentWeatherForecast = async (location: string) => {
   }
 };
 
+// Get tomorrow's weather forecast for a location
 const getWeatherForecast = async (location: string) => {
   if (!location) throw new Error("Please provide a location to check the weather.");
   try {
