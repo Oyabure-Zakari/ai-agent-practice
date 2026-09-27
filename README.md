@@ -1,141 +1,97 @@
 # AI Agent Practice 🤖
 
-A hands-on learning project for building AI agents using **LangGraph** and **LangChain**. This repository contains exercises to practice implementing agentic workflows with large language models.
+A hands-on TypeScript project for learning how to build AI agents with LangChain, LangGraph, and Groq. Each exercise is a runnable example of an agentic workflow.
 
-## 📚 About This Project
+## Exercises
 
-This project is designed to help you learn and practice building **AI Agents** with LangGraph. Through practical exercises, you'll understand:
+### Joke Improver Agent
 
-- How to structure agentic workflows
-- Building decision trees and loops in agent logic
-- Integrating language models into agent chains
-- Evaluating and iterating on AI-generated content
-- Best practices for prompt engineering and agent design
+`src/Joke-Improver-Agent-Exercise/` contains an agent that evaluates a joke, improves it when necessary, and evaluates the revised version again. It uses a LangGraph feedback loop, structured LLM output, and an in-memory cache.
 
-## 🎯 Current Exercise: Joke Improver Agent
+### Weather Agent
 
-Build an AI agent that evaluates a joke and continuously improves it until it reaches an acceptable quality score. The agent uses a feedback loop to:
+`src/Weather-Agent-Exercise/` contains a weather assistant that lets the LLM choose between tools for current conditions and tomorrow's forecast. It uses WeatherAPI for weather data, LangGraph's `ToolNode` for tool execution, and in-memory caching for LLM and tool calls.
 
-1. Evaluate the joke on multiple dimensions
-2. Check if it meets a quality threshold
-3. Improve it if needed
-4. Re-evaluate until satisfied
+## Prerequisites
 
-See [Joke-Improver-Agent-Exercise](src/Joke-Improver-Agent-Exercise/) for detailed instructions.
+- Node.js 18 or later
+- npm
+- A Groq API key
+- A WeatherAPI key for the Weather Agent exercise
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Node.js** v18 or higher
-- **npm** or **yarn** package manager
-- An API key from a supported LLM provider (e.g., Groq)
-
-### Clone the Repository
-
-```bash
-git clone https://github.com/yourusername/ai-agent-practice.git
-cd ai-agent-practice
-```
-
-### Install Dependencies
+## Setup
 
 ```bash
 npm install
 ```
 
-### Setup Environment Variables
-
-Create a `.env` file in the root directory:
+Create a `.env` file in the project root:
 
 ```env
-GROQ_API_KEY=your_api_key_here
+GROQ_API_KEY=your_groq_api_key
+WEATHERAPI_API_KEY=your_weatherapi_key
 ```
 
-Or use your preferred LLM provider by updating the configuration in the exercise files.
+`GROQ_API_KEY` is required by both exercises. `WEATHERAPI_API_KEY` is required only by the Weather Agent.
 
-### Run the Project
+## Run an Exercise
 
-To run the Joke Improver Agent exercise:
+Run the Joke Improver Agent:
 
 ```bash
-npm run dev src/Joke-Improver-Agent-Exercise/index.ts
+npm run dev -- src/Joke-Improver-Agent-Exercise/index.ts
 ```
 
-Build the project:
+Run the Weather Agent:
+
+```bash
+npm run dev -- src/Weather-Agent-Exercise/index.ts
+```
+
+Type-check the project:
 
 ```bash
 npm run build
 ```
 
-## 📁 Project Structure
+## Project Structure
 
-```
+```text
 ai-agent-practice/
 ├── src/
-│   └── Joke-Improver-Agent-Exercise/
-│       ├── index.ts              # Main agent implementation
-│       └── instruction.md        # Detailed exercise instructions
-├── package.json                  # Project dependencies
-├── tsconfig.json                 # TypeScript configuration
-└── README.md                      # This file
+│   ├── Joke-Improver-Agent-Exercise/
+│   │   ├── index.ts                 # Joke evaluation and improvement graph
+│   │   └── instruction.md           # Exercise requirements and guidance
+│   └── Weather-Agent-Exercise/
+│       ├── getWeatherInfo.ts        # WeatherAPI request helpers
+│       ├── index.ts                 # Tool-calling weather-agent graph
+│       ├── instruction.md           # Exercise requirements and guidance
+│       ├── prompts.ts               # System and sample user prompts
+│       └── urls.ts                  # WeatherAPI URL builders
+├── .env                             # Local API keys (not committed)
+├── .gitignore                       # Ignores dependencies, environment, and builds
+├── package.json                     # Scripts and project dependencies
+├── package-lock.json                # Locked dependency versions
+├── tsconfig.json                    # TypeScript compiler settings
+└── README.md                        # Project documentation
 ```
 
-## 🛠️ Tech Stack
+Generated or local-only directories such as `node_modules/` and `dist/` are intentionally excluded from version control.
 
-- **LangGraph**: Framework for building stateful AI agents
-- **LangChain**: Tools and utilities for working with LLMs
-- **Groq API**: Fast language model API (can be replaced with other providers)
-- **TypeScript**: Type-safe development
-- **tsx**: TypeScript executor for running files directly
-- **dotenv**: Environment variable management
+## Tech Stack
 
-### Key Dependencies
+- [LangGraph](https://langchain-ai.github.io/langgraphjs/) for stateful agent workflows
+- [LangChain](https://js.langchain.com/) for LLM integrations and tools
+- [Groq](https://console.groq.com/docs) for language-model inference
+- [WeatherAPI](https://www.weatherapi.com/docs/) for weather data
+- TypeScript and `tsx` for development and execution
 
-```json
-{
-  "@langchain/core": "^1.2.9",
-  "@langchain/groq": "^1.3.1",
-  "@langchain/langgraph": "^1.4.12",
-  "dotenv": "^17.4.2"
-}
-```
+## Notes
 
-## 📖 How to Use This Project
+- The examples use Groq's `openai/gpt-oss-120b` model.
+- Both exercises run sample requests defined directly in their `index.ts` files.
+- Read each exercise's `instruction.md` before modifying its implementation.
 
-1. **Start with the Exercise**: Read the [instruction.md](src/Joke-Improver-Agent-Exercise/instruction.md) file in the Joke-Improver-Agent-Exercise folder
-2. **Implement the Agent**: Build the agent in [index.ts](src/Joke-Improver-Agent-Exercise/index.ts) following the specifications
-3. **Run and Test**: Use `npm run dev` to test your implementation
-4. **Iterate**: Refine your agent based on the results and exercise requirements
-
-## 🎓 Learning Objectives
-
-By working through these exercises, you'll learn:
-
-- ✅ Core concepts of agentic AI systems
-- ✅ How to use LangGraph for workflow orchestration
-- ✅ Building feedback loops and decision trees
-- ✅ Prompt engineering for agents
-- ✅ Handling LLM outputs and tool integration
-- ✅ Testing and debugging AI agents
-
-## 🔗 Useful Resources
-
-- [LangGraph Documentation](https://python.langchain.com/docs/langgraph/)
-- [LangChain Documentation](https://js.langchain.com/)
-- [Groq API Docs](https://console.groq.com/docs)
-
-## 📝 Notes
-
-- Make sure your API key is added to `.env` before running
-- The project uses TypeScript for type safety
-- Each exercise builds on concepts from previous exercises
-- Feel free to experiment and modify the agents to explore different approaches
-
-## 🤝 Contributing
-
-Feel free to fork, modify, and extend this project for your own learning purposes.
-
-## 📄 License
+## License
 
 ISC
