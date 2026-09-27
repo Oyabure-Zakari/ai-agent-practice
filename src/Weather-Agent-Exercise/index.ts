@@ -13,13 +13,7 @@ import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/
 import { InMemoryCache } from "@langchain/langgraph-checkpoint";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { systemPrompt, user1Prompt, user2Prompt } from "./prompts.js";
-
-// Global variables
-
-const todayWeatherUrl = (location: string) =>
-  `http://api.weatherapi.com/v1/current.json?key=${process.env.WEATHERAPI_API_KEY}&q=${location}&aqi=no`;
-const tomorrowWeatherUrl = (location: string) =>
-  `https://api.weatherapi.com/v1/forecast.json?key=${process.env.WEATHERAPI_API_KEY}&q=${encodeURIComponent(location)}&days=2&aqi=no&alerts=yes`;
+import { todayWeatherUrl, tomorrowWeatherUrl } from "./urls.js";
 
 // Define the state schema for messages i.e the conversations
 const State = new StateSchema({
@@ -223,26 +217,26 @@ try {
 }
 console.timeEnd("User 1 (Cached)");
 
-console.log("\n\n================= User 2 =================");
-console.time("User 2");
-try {
-  const user2Response = await graph.invoke({
-    messages: [new HumanMessage(user2Prompt)],
-  });
-  console.log(user2Response.messages.at(-1)?.content);
-} catch (error) {
-  throw new Error(`Error running graph: ${(error as Error).message}`);
-}
-console.timeEnd("User 2");
+// console.log("\n\n================= User 2 =================");
+// console.time("User 2");
+// try {
+//   const user2Response = await graph.invoke({
+//     messages: [new HumanMessage(user2Prompt)],
+//   });
+//   console.log(user2Response.messages.at(-1)?.content);
+// } catch (error) {
+//   throw new Error(`Error running graph: ${(error as Error).message}`);
+// }
+// console.timeEnd("User 2");
 
-console.log("================= User 2 (Cached) =================");
-console.time("User 2 (Cached)");
-try {
-  const user2Response = await graph.invoke({
-    messages: [new HumanMessage(user2Prompt)],
-  });
-  console.log(user2Response.messages.at(-1)?.content);
-} catch (error) {
-  throw new Error(`Error running graph: ${(error as Error).message}`);
-}
-console.timeEnd("User 2 (Cached)");
+// console.log("================= User 2 (Cached) =================");
+// console.time("User 2 (Cached)");
+// try {
+//   const user2Response = await graph.invoke({
+//     messages: [new HumanMessage(user2Prompt)],
+//   });
+//   console.log(user2Response.messages.at(-1)?.content);
+// } catch (error) {
+//   throw new Error(`Error running graph: ${(error as Error).message}`);
+// }
+// console.timeEnd("User 2 (Cached)");
