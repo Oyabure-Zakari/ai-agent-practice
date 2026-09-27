@@ -80,6 +80,34 @@ const getCurrentWeatherForecast = async (location: string) => {
   }
 };
 
+const getWeatherForecast = async (location: string) => {
+  if (!location) throw new Error("Please provide a location to check the weather.");
+  try {
+    const weatherUrl = (location: string) =>
+      `https://api.weatherapi.com/v1/forecast.json?key=${process.env.WEATHERAPI_API_KEY}&q=${encodeURIComponent(location)}&days=2&aqi=no&alerts=yes`;
+    const response = await fetch(weatherUrl(location));
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    const tomorrow = data.forecast.forecastday[1];
+    return `
+      Weather forecast for ${data.location.name}, ${data.location.country}:
+      Date: ${tomorrow.date}
+      Condition: ${tomorrow.day.condition.text}
+      Maximum temperature: ${tomorrow.day.maxtemp_c}°C
+      Minimum temperature: ${tomorrow.day.mintemp_c}°C
+      Chance of rain: ${tomorrow.day.daily_chance_of_rain}%
+      Humidity: ${tomorrow.day.avghumidity}%
+      Maximum wind: ${tomorrow.day.maxwind_kph} km/h
+    `;
+  } catch (error: unknown) {
+    throw new Error(`Fetch failed: ${(error as Error).message}`);
+  }
+};
+
+getWeatherForecast("Abuja");
+
 // Define a tool
 const weatherTool = tool(
   async ({ location }) => {
