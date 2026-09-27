@@ -57,7 +57,7 @@ const llm = new ChatGroq({
 });
 
 // Get the location's current weather data
-const getCurrentWeatherData = async (location: string) => {
+const getCurrentWeatherForecast = async (location: string) => {
   if (!location) throw new Error("Please provide a location to check the weather.");
   try {
     const response = await fetch(weatherUrl(location));
@@ -84,7 +84,7 @@ const getCurrentWeatherData = async (location: string) => {
 const weatherTool = tool(
   async ({ location }) => {
     console.log("Calling tool.......");
-    return await getCurrentWeatherData(location);
+    return await getCurrentWeatherForecast(location);
   },
   {
     name: "Weather_Tool",
