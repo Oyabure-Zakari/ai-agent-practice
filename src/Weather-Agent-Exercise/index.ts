@@ -12,55 +12,10 @@ import * as z from "zod";
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { InMemoryCache } from "@langchain/langgraph-checkpoint";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { systemPrompt, user1Prompt, user2Prompt } from "./prompts.js";
 
 // Global variables
-const userPrompt = "What is the weather in Abuja?";
-const systemPrompt = `
-  ROLE:
-  You are a weather assistant.
 
-  TASKS:
-  1) Answer weather questions using only the information provided by either the todayWeatherTool or tomorrowWeatherTool.
-  2) Rewrite the weather information naturally while preserving all relevant information provided by the tools.
-
-  TODAY'S WEATHER RESPONSE:
-  When the tool provides today's weather, it may contain:
-  - Location
-  - Condition
-  - Temperature
-  - Feels-like temperature
-  - Chance of rain
-  - Humidity
-  - Wind speed and direction
-  - Visibility
-  - Last updated time
-
-  TOMORROW'S FORECAST RESPONSE:
-  When the tool provides tomorrow's forecast, it may contain:
-  - Location
-  - Date
-  - Condition
-  - Maximum temperature
-  - Minimum temperature
-  - Chance of rain
-  - Humidity
-  - Maximum wind speed
-
-  RULES:
-  1) Do not mention weather information that is not included in the tool response.
-  2) Do not invent, calculate, infer, or add any weather information.
-  3) If a field is not provided by the tool, do not mention it.
-  4) Use the appropriate wording based on whether the information is for the today's weather or tomorrow's forecast.
-  5) Do not include asterisks (*), bullet points, emojis, markdown, or unnecessary symbols.
-  6) Answer naturally and clearly using only the information provided by the Weather Tool.
-
-  EXAMPLES:
-  TODAY'S WEATHER:
-  The current weather in Abuja, Nigeria is a light rain shower. The temperature is 24.6°C, but it feels like 29°C. There's a 78% chance of rain, humidity is 93%, and the wind is blowing at 5.8 km/h from the east. Visibility is 10 km. The weather was last updated at 11:00 PM on September 19, 2026.
-
-  TOMORROW'S FORECAST:
-  Tomorrow's weather forecast for Abuja, Nigeria is foggy. The temperature will range from 20.4°C to 24.9°C, with an 89% chance of rain. Humidity will be around 93%, and the maximum wind speed will be 6.8 km/h.
-`;
 const todayWeatherUrl = (location: string) =>
   `http://api.weatherapi.com/v1/current.json?key=${process.env.WEATHERAPI_API_KEY}&q=${location}&aqi=no`;
 const tomorrowWeatherUrl = (location: string) =>
@@ -131,7 +86,7 @@ const tomorrowWeatherForecast = async (location: string) => {
 // Define tools
 const todayWeatherTool = tool(
   async ({ location }) => {
-    console.log("Calling tool.......");
+    console.log("Calling today weather tool.......");
     return await todayWeatherForecast(location);
   },
   {
@@ -244,26 +199,50 @@ const graph = new StateGraph(State)
 
 // Run the graph
 // Test to see if the caching works by invoking the graph twice with the same user input
-console.log("================= First Call =================");
-console.time("First call");
+console.log("================= User 1 =================");
+console.time("User 1");
 try {
-  const firstCall = await graph.invoke({
-    messages: [new HumanMessage(userPrompt)],
+  const user1Response = await graph.invoke({
+    messages: [new HumanMessage(user1Prompt)],
   });
-  console.log(firstCall.messages.at(-1)?.content);
+  console.log(user1Response.messages.at(-1)?.content);
 } catch (error) {
   throw new Error(`Error running graph: ${(error as Error).message}`);
 }
-console.timeEnd("First call");
+console.timeEnd("User 1");
 
-console.log("\n\n================= Second Call =================");
-console.time("Second call");
+console.log("================= User 1 (Cached) =================");
+console.time("User 1 (Cached)");
 try {
-  const secondCall = await graph.invoke({
-    messages: [new HumanMessage(userPrompt)],
+  const user1Response = await graph.invoke({
+    messages: [new HumanMessage(user1Prompt)],
   });
-  console.log(secondCall.messages.at(-1)?.content);
+  console.log(user1Response.messages.at(-1)?.content);
 } catch (error) {
   throw new Error(`Error running graph: ${(error as Error).message}`);
 }
-console.timeEnd("Second call");
+console.timeEnd("User 1 (Cached)");
+
+console.log("\n\n================= User 2 =================");
+console.time("User 2");
+try {
+  const user2Response = await graph.invoke({
+    messages: [new HumanMessage(user2Prompt)],
+  });
+  console.log(user2Response.messages.at(-1)?.content);
+} catch (error) {
+  throw new Error(`Error running graph: ${(error as Error).message}`);
+}
+console.timeEnd("User 2");
+
+console.log("================= User 2 (Cached) =================");
+console.time("User 2 (Cached)");
+try {
+  const user2Response = await graph.invoke({
+    messages: [new HumanMessage(user2Prompt)],
+  });
+  console.log(user2Response.messages.at(-1)?.content);
+} catch (error) {
+  throw new Error(`Error running graph: ${(error as Error).message}`);
+}
+console.timeEnd("User 2 (Cached)");
