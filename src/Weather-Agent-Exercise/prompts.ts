@@ -1,6 +1,6 @@
 export const user1Prompt = "What's the weather in Abuja?";
 
-export const user2Prompt = "What's the weather in Abuja tomorrow?";
+export const user2Prompt = "What about Lagos tomorrow?";
 
 export const systemPrompt = `
   ROLE:
