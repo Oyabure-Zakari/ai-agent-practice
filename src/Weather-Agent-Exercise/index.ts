@@ -6,7 +6,6 @@ import {
   StateSchema,
   type ConditionalEdgeRouter,
   type GraphNode,
-  type StateType,
 } from "@langchain/langgraph";
 import { tool } from "@langchain/core/tools";
 import * as z from "zod";
