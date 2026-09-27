@@ -10,14 +10,14 @@ A hands-on TypeScript project for learning how to build AI agents with LangChain
 
 ### Weather Agent
 
-`src/Weather-Agent-Exercise/` contains a weather assistant that lets the LLM choose between tools for current conditions and tomorrow's forecast. It uses WeatherAPI for weather data, LangGraph's `ToolNode` for tool execution, and in-memory caching for LLM and tool calls.
+`src/Weather-Agent-Exercise/` contains a weather assistant that lets the LLM choose between tools for current conditions and tomorrow's forecast. It uses [WeatherAPI](https://www.weatherapi.com/) for weather data, LangGraph's `ToolNode` for tool execution, and in-memory caching for LLM and tool calls.
 
 ## Prerequisites
 
-- Node.js 18 or later
-- npm
-- A Groq API key
-- A WeatherAPI key for the Weather Agent exercise
+* Node.js 18 or later
+* npm
+* A Groq API key
+* A WeatherAPI key for the Weather Agent exercise
 
 ## Setup
 
@@ -68,29 +68,29 @@ ai-agent-practice/
 │       ├── instruction.md           # Exercise requirements and guidance
 │       ├── prompts.ts               # System and sample user prompts
 │       └── urls.ts                  # WeatherAPI URL builders
-├── .env                             # Local API keys (not committed)
-├── .gitignore                       # Ignores dependencies, environment, and builds
-├── package.json                     # Scripts and project dependencies
-├── package-lock.json                # Locked dependency versions
-├── tsconfig.json                    # TypeScript compiler settings
-└── README.md                        # Project documentation
+├── .env                             
+├── .gitignore                       
+├── package.json                     
+├── package-lock.json                
+├── tsconfig.json                    
+└── README.md                        
 ```
 
 Generated or local-only directories such as `node_modules/` and `dist/` are intentionally excluded from version control.
 
 ## Tech Stack
 
-- [LangGraph](https://langchain-ai.github.io/langgraphjs/) for stateful agent workflows
-- [LangChain](https://js.langchain.com/) for LLM integrations and tools
-- [Groq](https://console.groq.com/docs) for language-model inference
-- [WeatherAPI](https://www.weatherapi.com/docs/) for weather data
-- TypeScript and `tsx` for development and execution
+* [LangGraph](https://langchain-ai.github.io/langgraphjs/) for stateful agent workflows
+* [LangChain](https://js.langchain.com/) for LLM integrations and tools
+* [Groq](https://console.groq.com/docs) for language-model inference
+* [WeatherAPI](https://www.weatherapi.com/) for weather data
+* TypeScript and `tsx` for development and execution
 
 ## Notes
 
-- The examples use Groq's `openai/gpt-oss-120b` model.
-- Both exercises run sample requests defined directly in their `index.ts` files.
-- Read each exercise's `instruction.md` before modifying its implementation.
+* The examples use Groq's `openai/gpt-oss-120b` model.
+* Both exercises run sample requests defined directly in their `index.ts` files.
+* Read each exercise's `instruction.md` before modifying its implementation.
 
 ## License
 
