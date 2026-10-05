@@ -6,7 +6,7 @@ import { Document } from "@langchain/core/documents";
 // Full path to the folder that contains all the policy documents
 const agronexaPoliciesFolderPath = path.resolve("src/Document-Agent-Exercise/agronexa-policies");
 
-// Reads every .docx file in the folder and turns them into a LangChain Document object that will be used in the RAG pipeline.
+// Loads .docx files, extracts their text, and converts them into LangChain Documents for the RAG pipeline.
 export async function loadDocuments(): Promise<Document[]> {
   try {
     // Gets the name of every file inside the folder
