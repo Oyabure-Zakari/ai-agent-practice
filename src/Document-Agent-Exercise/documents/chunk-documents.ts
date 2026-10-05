@@ -9,19 +9,20 @@ const splitter = new RecursiveCharacterTextSplitter({
 // Loads the documents first, then breaks their text into smaller chunks
 // that can be used later for embeddings and retrieval.
 export async function chunkDocuments() {
-  // Get the LangChain Documents created from our Word files.
-  const documents = await loadDocuments();
+  try {
+    // Get the LangChain Documents created from our Word files.
+    const documents = await loadDocuments();
 
-  // Break the documents into smaller pieces using our chunk size and overlap rules.
-  const chunks = await splitter.splitDocuments(documents);
+    // Break the documents into smaller pieces using our chunk size and overlap rules.
+    const chunks = await splitter.splitDocuments(documents);
 
-  // Return all the chunks so the next stage of the RAG pipeline can use them.
-  return chunks;
+    // Return all the chunks so the next stage of the RAG pipeline can use them.
+    console.log(`Chunks: ${chunks.length}`);
+    console.log(`Sample chunk: ${chunks[5]?.pageContent}`);
+    return chunks;
+  } catch (error: unknown) {
+    throw new Error(`Failed to chunk documents: ${(error as Error).message}`);
+  }
 }
 
-chunkDocuments().then((chunks) => {
-  console.log(`Chunks: ${chunks.length}`);
-  console.log(`Sample chunk: ${chunks[5]?.pageContent}`);
-}).catch((error: unknown) => {
-  console.error(`Failed to chunk documents: ${(error as Error).message}`);
-});
+chunkDocuments();
