@@ -2,8 +2,8 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { loadDocuments } from "./load-documents.js";
 
 const splitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 4000, // The maximum number of characters in each chunk. e.g 100 means each chunk will have at most 100 characters.
-  chunkOverlap: 2000, // The number of characters to overlap between chunks.  e.g 20 means 20 characters of the previous chunk will be repeated in the next chunk..
+  chunkSize: 1000, // The maximum number of characters in each chunk. e.g 100 means each chunk will have at most 100 characters.
+  chunkOverlap: 500, // The number of characters to overlap between chunks.  e.g 20 means 20 characters of the previous chunk will be repeated in the next chunk..
 });
 
 // Loads the documents first, then breaks their text into smaller chunks
