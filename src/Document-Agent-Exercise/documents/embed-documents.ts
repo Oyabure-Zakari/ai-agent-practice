@@ -9,14 +9,19 @@ const embeddingModel = new GoogleGenerativeAIEmbeddings({
   taskType: TaskType.RETRIEVAL_DOCUMENT, // Tells the model this information will be stored and searched later (document retrieval). This affects how the model generates the embeddings.
 });
 
+// Creates embeddings from all the document chunks.
 export async function embedDocuments() {
   try {
-    const vectors = await embeddingModel.embedDocuments(["Hello world", "Bye bye"]);
-    console.log(vectors);
-    // return vectors;
+    // Get the chunks and keep only the text we want to turn into embeddings, because chunkDocuments()
+    // returns LangChain Document objects, but embedDocuments() only accepts an array of strings.
+    const documentChunks = (await chunkDocuments()).map((chunk) => chunk.pageContent);
+
+    // Turns each piece of text into a vector of numbers.
+    const vectors = await embeddingModel.embedDocuments(documentChunks);
+
+    // Return the vectors for the next step in the RAG pipeline.
+    return vectors;
   } catch (error: unknown) {
     throw new Error(`Failed to embed documents: ${(error as Error).message}`);
   }
 }
-
-embedDocuments();
