@@ -26,7 +26,7 @@ export async function loadDocuments(): Promise<Document[]> {
       // Result → "src/Document-Agent-Exercise/agronexa-policies/01_AgroNexa_Company_Profile.docx"
       const filePath = path.join(agronexaPoliciesFolderPath, file);
 
-      // Gets the actual contents of the Word document from its file path so mammoth can extract the text from it.
+      // Gets the actual Word document from its file path so mammoth can extract the text from it.
       const buffer = await fs.readFile(filePath);
 
       // Pulls out the plain text from the Word document
