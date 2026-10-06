@@ -1,5 +1,3 @@
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import { TaskType } from "@google/generative-ai";
 import "dotenv/config";
 import { chunkDocuments } from "./chunk-documents.js";
 import { embeddingModel } from "../models.js";
