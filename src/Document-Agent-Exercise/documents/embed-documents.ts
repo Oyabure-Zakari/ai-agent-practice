@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { chunkDocuments } from "./chunk-documents.js";
 import { embeddingModel } from "../models.js";
 
