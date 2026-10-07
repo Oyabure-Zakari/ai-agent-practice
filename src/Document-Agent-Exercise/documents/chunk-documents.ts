@@ -21,5 +21,3 @@ export async function chunkDocuments() {
     throw new Error(`Failed to chunk documents: ${(error as Error).message}`);
   }
 }
-
-chunkDocuments();
