@@ -40,7 +40,8 @@ const documents = [document1, document2, document3, document4];
 
 const storeVectors = async (documents: Document[]) => {
   try {
-    const result = await vectorStore.addDocuments(documents);  
+    // Gives each document a unique, fixed ID so running the code again doesn't create duplicate documents in Pinecone Vector DB.
+    const result = await vectorStore.addDocuments(documents, { ids: ["1", "2", "3", "4"] }); 
     console.log(`Successfully stored ${result.length} vectors in Pinecone.`);
   } catch (error: unknown) {
     throw new Error(`Failed to store vectors: ${(error as Error).message}`);
