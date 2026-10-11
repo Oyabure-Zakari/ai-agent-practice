@@ -3,7 +3,7 @@ import { embeddingModel } from "../models.js";
 import { pineconeIndex } from "../lib/pinecone.js";
 
 // Finds document chunks that are relevant to a user's question.
-async function retrieveDocuments(query: string) {
+export async function retrieveDocuments(query: string) {
   try {
     // Connect to the existing vectors without uploading documents again.
     const vectorStore = await PineconeStore.fromExistingIndex(embeddingModel, { pineconeIndex });
@@ -23,17 +23,3 @@ async function retrieveDocuments(query: string) {
     throw new Error(`Failed to retrieve documents: ${(error as Error).message}`);
   }
 }
-
-// Test the retrieval process with a sample question.
-async function userQuery() {
-  try {
-    const query = "Is AgroNexa liable for crop, profit, income or indirect loss.?";
-
-    const relevantChunks = await retrieveDocuments(query);
-    console.log("Relevant Chunks:", relevantChunks);
-  } catch (error: unknown) {
-    throw new Error(`Failed to process user query: ${(error as Error).message}`);
-  }
-}
-
-userQuery();
