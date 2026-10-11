@@ -5,7 +5,7 @@ import { chunkDocuments } from "./chunk-documents.js";
 import { pineconeIndex } from "../lib/pinecone.js";
 
 // This function gets the chunks, converts them to vectors using the embedding model, and stores them in the Pinecone vector database.
-async function storeChunks() {
+export async function storeChunks() {
   try {
     // Get chunks
     const chunks = await chunkDocuments();
