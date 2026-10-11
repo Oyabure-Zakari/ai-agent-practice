@@ -1,14 +1,8 @@
 import "dotenv/config";
 import { PineconeStore } from "@langchain/pinecone";
-import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
 import { embeddingModel } from "../models.js";
 import { chunkDocuments } from "./chunk-documents.js";
-
-// Set up Pinecone
-const pinecone = new PineconeClient({
-  apiKey: process.env.PINECONE_API_KEY!,
-});
-const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
+import { pineconeIndex } from "../lib/pinecone.js";
 
 // This function gets the chunks, converts them to vectors using the embedding model, and stores them in the Pinecone vector database.
 async function storeChunks() {
