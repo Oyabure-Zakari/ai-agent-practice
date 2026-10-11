@@ -27,11 +27,8 @@ async function storeChunks() {
     });
 
     // This turns each chunk into an embedding and uploads it to Pinecone
-    const result = await vectorStore.addDocuments(chunks, { ids });
-    console.log(`Successfully stored ${result.length} vectors in Pinecone.`);
+    await vectorStore.addDocuments(chunks, { ids });
   } catch (error: unknown) {
     throw new Error(`Failed to store vectors: ${(error as Error).message}`);
   }
 }
-
-storeChunks();
