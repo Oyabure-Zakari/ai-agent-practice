@@ -14,7 +14,11 @@ async function retrieveDocuments(query: string) {
     // 3. Returns the document chunks that are associated with those similar vectors.
     const relevantChunks = await vectorStore.similaritySearch(query, 3);
 
-    return relevantChunks;
+    // Return the user's question and the relevant document chunks so that the llm can use them to generate a response.
+    return {
+      query,
+      relevantChunks,
+    };
   } catch (error: unknown) {
     throw new Error(`Failed to retrieve documents: ${(error as Error).message}`);
   }
@@ -26,7 +30,7 @@ async function userQuery() {
     const query = "Is AgroNexa liable for crop, profit, income or indirect loss.?";
 
     const relevantChunks = await retrieveDocuments(query);
-    console.log("Relevant Chunks:", relevantChunks[0]);
+    console.log("Relevant Chunks:", relevantChunks);
   } catch (error: unknown) {
     throw new Error(`Failed to process user query: ${(error as Error).message}`);
   }
