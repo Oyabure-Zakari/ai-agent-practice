@@ -13,7 +13,7 @@ import { retrieveDocuments } from "./documents/retrieve-documents.js";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import userPrompt from "./prompts/userPrompt.js";
-import { behavioralSystemPrompt } from "./prompts/systemPrompt.js";
+import { behavioralSystemPrompt, outputSystemPrompt } from "./prompts/systemPrompt.js";
 
 // Set up the LLM
 const llm = new ChatGroq({
@@ -28,11 +28,16 @@ const State = new StateSchema({
   messages: MessagesValue,
 });
 
+// Define the structure required for the final answer.
+const responseSchema = z.object({
+  response: z.string().describe("The final answer to the user's question."),
+});
+
 // Define tools
 // Gives the AI a tool it can call to search AgroNexa's documents.
 export const retrieveDocumentsTool = tool(
   async ({ query }) => {
-    console.log("Calling retrieve document tool.......");
+    console.log("Calling retrieve document tool...");
     return await retrieveDocuments(query);
   },
   {
@@ -48,10 +53,13 @@ export const retrieveDocumentsTool = tool(
 // Bind the LLM with tools
 const llmWithTools = llm.bindTools([retrieveDocumentsTool]);
 
+// Configure the LLM to return its final answer in the required schema.
+const llmWithStructuredOutput = llm.withStructuredOutput(responseSchema);
+
 // Nodes
-// This node calls the llm which decides whether to call a tool or not.
-const llmCall: GraphNode<typeof State> = async (state) => {
-  console.log("Calling LLm.......");
+// 1. This node calls the llm which decides whether to call a tool or not.
+const llmCallNode: GraphNode<typeof State> = async (state) => {
+  console.log("Calling LLm...");
   const response = await llmWithTools.invoke([
     new SystemMessage(behavioralSystemPrompt),
     ...state.messages,
@@ -60,36 +68,55 @@ const llmCall: GraphNode<typeof State> = async (state) => {
     messages: [response],
   };
 };
-// This is used to call the tools and return the results.
+
+// 2. This is used to call the tools and return the results.
 const toolNode = new ToolNode([retrieveDocumentsTool]);
+
+// 3. This node calls the llm which decides whether to call a tool or not.
+const structuredOutputNode: GraphNode<typeof State> = async (state) => {
+  console.log("Generating structured final answer...");
+  const { response } = await llmWithStructuredOutput.invoke([
+    new SystemMessage(outputSystemPrompt),
+    ...state.messages,
+  ]);
+  return {
+    messages: [
+      new AIMessage({
+        content: response,
+      }),
+    ],
+  };
+};
 
 // Conditional edge function to route to the tool node or end
 const shouldContinue: ConditionalEdgeRouter<{
   InputSchema: typeof State;
-  Nodes: "toolNode";
+  Nodes: "toolNode" | "structuredOutputNode";
 }> = (state) => {
   const messages = state.messages;
   const lastMessage = messages.at(-1);
   // This check makes sure the last message exists and is an AIMessage before checking for tool calls.
   // If it's not included, the code could try to access tool_calls on a missing or non-AI message, which can cause errors.
   if (!lastMessage || !AIMessage.isInstance(lastMessage)) {
-    return "__end__";
+    return "structuredOutputNode";
   }
   // If the LLM makes a tool call, then perform an action
   if (lastMessage.tool_calls?.length) {
     return "toolNode";
   }
   // Otherwise, we stop (reply to the user)
-  return "__end__";
+  return "structuredOutputNode";
 };
 
 // Build the graph
 const graph = new StateGraph(State)
-  .addNode("llmNode", llmCall)
+  .addNode("llmNode", llmCallNode)
   .addNode("toolNode", toolNode)
+  .addNode("structuredOutputNode", structuredOutputNode)
   .addEdge("__start__", "llmNode")
-  .addConditionalEdges("llmNode", shouldContinue, ["toolNode", "__end__"])
+  .addConditionalEdges("llmNode", shouldContinue, ["toolNode", "structuredOutputNode"])
   .addEdge("toolNode", "llmNode")
+  .addEdge("structuredOutputNode", "__end__")
   .compile();
 
 // Run the graph
