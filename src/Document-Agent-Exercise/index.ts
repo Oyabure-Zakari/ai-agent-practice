@@ -13,7 +13,7 @@ import { retrieveDocuments } from "./documents/retrieve-documents.js";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import userPrompt from "./prompts/userPrompt.js";
-import behavioralSystemPrompt from "./prompts/systemPrompt.js";
+import { behavioralSystemPrompt } from "./prompts/systemPrompt.js";
 
 // Set up the LLM
 const llm = new ChatGroq({
