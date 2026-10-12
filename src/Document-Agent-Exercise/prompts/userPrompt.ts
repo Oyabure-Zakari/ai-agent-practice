@@ -16,5 +16,5 @@ const questions = [
 const questionIndex = Math.floor(Math.random() * questions.length);
 
 // Grabs the question based on it's index
-const userPrompt = questions[questionIndex];
+const userPrompt = questions[questionIndex] as string;
 export default userPrompt;
