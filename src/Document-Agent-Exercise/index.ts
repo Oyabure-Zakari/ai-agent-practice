@@ -10,19 +10,10 @@ import {
 import "dotenv/config";
 import * as z from "zod";
 import { retrieveDocuments } from "./documents/retrieve-documents.js";
-import {
-  AIMessage,
-  HumanMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
+import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import systemPrompt from "./prompts/systemPrompt.js";
 import userPrompt from "./prompts/userPrompt.js";
-
-// Define the state schema for messages i.e the conversations
-const State = new StateSchema({
-  messages: MessagesValue,
-});
 
 // Set up the LLM
 const llm = new ChatGroq({
@@ -30,6 +21,11 @@ const llm = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY as string,
   maxTokens: 1000,
   temperature: 0,
+});
+
+// Define the state schema for messages i.e the conversations
+const State = new StateSchema({
+  messages: MessagesValue,
 });
 
 // Define tools
@@ -44,11 +40,7 @@ export const retrieveDocumentsTool = tool(
     description:
       "Search AgroNexa's official documents for information about its company, products, fertilizer formulations, policies, services, and operations. Use this tool whenever a question requires AgroNexa-specific information. Input a clear search query describing the information needed.",
     schema: z.object({
-      query: z
-        .string()
-        .describe(
-          "The question or topic to search for in AgroNexa's documents.",
-        ),
+      query: z.string().describe("The question or topic to search for in AgroNexa's documents."),
     }),
   },
 );
@@ -60,10 +52,7 @@ const llmWithTools = llm.bindTools([retrieveDocumentsTool]);
 // This node calls the llm which decides whether to call a tool or not.
 const llmCall: GraphNode<typeof State> = async (state) => {
   console.log("Calling LLm.......");
-  const response = await llmWithTools.invoke([
-    new SystemMessage(systemPrompt),
-    ...state.messages,
-  ]);
+  const response = await llmWithTools.invoke([new SystemMessage(systemPrompt), ...state.messages]);
   return {
     messages: [response],
   };
