@@ -105,6 +105,7 @@ try {
   const aiAgentResponse = await graph.invoke({
     messages: [new HumanMessage(userPrompt)],
   });
+  // Log the user's message and the AI-Agent response
   console.log({
     user: userPrompt,
     response: aiAgentResponse.messages.at(-1)?.content,
