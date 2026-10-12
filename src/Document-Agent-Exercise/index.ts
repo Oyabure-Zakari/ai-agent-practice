@@ -12,8 +12,8 @@ import * as z from "zod";
 import { retrieveDocuments } from "./documents/retrieve-documents.js";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import systemPrompt from "./prompts/systemPrompt.js";
 import userPrompt from "./prompts/userPrompt.js";
+import behavioralSystemPrompt from "./prompts/systemPrompt.js";
 
 // Set up the LLM
 const llm = new ChatGroq({
@@ -52,7 +52,10 @@ const llmWithTools = llm.bindTools([retrieveDocumentsTool]);
 // This node calls the llm which decides whether to call a tool or not.
 const llmCall: GraphNode<typeof State> = async (state) => {
   console.log("Calling LLm.......");
-  const response = await llmWithTools.invoke([new SystemMessage(systemPrompt), ...state.messages]);
+  const response = await llmWithTools.invoke([
+    new SystemMessage(behavioralSystemPrompt),
+    ...state.messages,
+  ]);
   return {
     messages: [response],
   };

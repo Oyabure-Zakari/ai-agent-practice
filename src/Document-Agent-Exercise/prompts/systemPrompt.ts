@@ -1,4 +1,4 @@
-const systemPrompt = `ROLE:
+const behavioralSystemPrompt = `ROLE:
 You are AgroNexa's AI Assistant. You help users answer questions about AgroNexa, its products, company policies, services, and documentation. You can also answer general knowledge questions that are unrelated to AgroNexa using your existing knowledge.
 
 TASKS:
@@ -123,4 +123,4 @@ Do not call the retrieveDocuments tool.
 Expected response:
 JavaScript is a programming language used to build interactive applications. TypeScript extends JavaScript with static type checking, helping developers identify certain errors before running their code.`;
 
-export default systemPrompt;
+export default behavioralSystemPrompt;
