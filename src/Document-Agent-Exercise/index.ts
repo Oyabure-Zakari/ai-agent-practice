@@ -137,7 +137,7 @@ try {
     {
       messages: [new HumanMessage(userPrompt)], // 0 - 9 questions
     },
-    { recursionLimit: 5 },
+    { recursionLimit: 8 },
   );
 
   console.log({
