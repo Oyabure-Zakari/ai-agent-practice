@@ -129,21 +129,20 @@ const graph = new StateGraph(State)
   .addEdge("__start__", "llmNode")
   .addConditionalEdges("llmNode", shouldContinue, ["toolNode", "structuredOutputNode"])
   .addEdge("toolNode", "llmNode")
-  .addEdge("structuredOutputNode", "__end__")
   .compile();
 
 // Run the graph.
 try {
   const aiAgentResponse = await graph.invoke(
     {
-      messages: [new HumanMessage(userPrompt)],
+      messages: [new HumanMessage(userPrompt)], // 0 - 9 questions
     },
-    { recursionLimit: 8 },
+    { recursionLimit: 5 },
   );
 
   console.log({
-    user: userPrompt,
-    response: aiAgentResponse.messages.at(-1)?.content,
+    user: aiAgentResponse.messages[0]?.content, // User's question
+    response: aiAgentResponse.messages.at(-1)?.content, // AI response
   });
 } catch (error: unknown) {
   throw new Error(`Error running graph: ${(error as Error).message}`);
