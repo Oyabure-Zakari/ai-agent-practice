@@ -10,6 +10,7 @@ const questions = [
   "Who is the president of Nigeria?",
   "What is the weather in Abuja?",
   "Who won the 2026 World Cup?",
+  "How do I contact the customer care",
 ];
 
 // Randomly get the index/position of a question
