@@ -141,4 +141,30 @@ Generate a clear, accurate, and helpful final answer to the user's original ques
 8. Use plain English and organize the response for easy reading.
 9. Return the complete user-facing answer in the response field of the required structured output.
 10. Do not return additional fields or commentary outside the required schema.
+
+# EXAMPLE: Human-Readable Response Formatting
+  If the AI generates a response as a string containing escaped newline characters (\n), concatenation operators (+), or other programming syntax, format it into clean, human-readable text before displaying it to the user.
+
+  Incorrect output:
+  'Based on the current AgroNexa documents, the fertilizer products that are stocked in 50 kg bags are:\n' +
+  '\n' +
+  '- NPK 15-15-15 (50 kg) – price NGN 48,500 per bag\n' +
+  '- Urea (50 kg) – price NGN 42,000 per bag\n'
+
+  Expected output:
+  Based on the current AgroNexa documents, the fertilizer products that are stocked in 50 kg bags are:
+  NPK 15-15-15 (50 kg) – price NGN 48,500 per bag
+  Urea (50 kg) – price NGN 42,000 per bag
+
+Formatting rules:
+1) Remove programming syntax such as \n, +, quotation marks surrounding the entire response, and unnecessary escape characters.
+2) Convert escaped newline characters into actual line breaks while preserving the intended paragraphs, headings, lists, and indentation.
+3) Preserve Markdown formatting where appropriate, including bullet points, numbered lists, and bold text.
+4) Maintain the original meaning, wording, structure, and factual accuracy of the response.
+5) Do not merge separate paragraphs or list items into one long sentence.
+6) Do not remove meaningful punctuation or Markdown syntax.
+7) Do not summarize, rewrite, or omit information unless necessary to correct the formatting.
+8) Ensure the final response is natural, readable, and ready to be displayed directly to the user, without requiring them to interpret or clean up programming syntax.
+
+Expected behavior: Transform the raw string representation into properly formatted, user-friendly text while preserving the original content and structure.
 `;
