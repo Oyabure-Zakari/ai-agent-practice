@@ -14,7 +14,7 @@ import * as z from "zod";
 
 import { retrieveDocuments } from "./documents/retrieve-documents.js";
 import userPrompt from "./prompts/userPrompt.js";
-import { behavioralSystemPrompt } from "./prompts/systemPrompt.js";
+import { systemPrompt } from "./prompts/systemPrompt.js";
 
 // Set up the LLM.
 const llm = new ChatGroq({
@@ -51,12 +51,7 @@ const llmWithTools = llm.bindTools([retrieveDocumentsTool]);
 // Node 1: Let the LLM answer directly or request a tool.
 const llmCall: GraphNode<typeof State> = async (state) => {
   console.log("Calling LLM...");
-
-  const response = await llmWithTools.invoke([
-    new SystemMessage(behavioralSystemPrompt),
-    ...state.messages,
-  ]);
-
+  const response = await llmWithTools.invoke([new SystemMessage(systemPrompt), ...state.messages]);
   return {
     messages: [response],
   };
@@ -71,15 +66,8 @@ const shouldContinue: ConditionalEdgeRouter<{
   Nodes: "toolNode" | "__end__";
 }> = (state) => {
   const lastMessage = state.messages.at(-1);
-
-  if (!lastMessage || !AIMessage.isInstance(lastMessage)) {
-    return "__end__";
-  }
-
-  if (lastMessage.tool_calls?.length) {
-    return "toolNode";
-  }
-
+  if (!lastMessage || !AIMessage.isInstance(lastMessage)) return "__end__";
+  if (lastMessage.tool_calls?.length) return "toolNode";
   return "__end__";
 };
 
