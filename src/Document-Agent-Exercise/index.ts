@@ -11,7 +11,6 @@ import {
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import "dotenv/config";
 import * as z from "zod";
-
 import { retrieveDocuments } from "./documents/retrieve-documents.js";
 import userPrompt from "./prompts/userPrompt.js";
 import { systemPrompt } from "./prompts/systemPrompt.js";
@@ -88,7 +87,7 @@ try {
     },
     { recursionLimit: 5 },
   );
-
+  // Log both the user's question and AI reponse
   console.log({
     user: aiAgentResponse.messages[0]?.content, // User's question
     response: aiAgentResponse.messages.at(-1)?.content, // AI response
