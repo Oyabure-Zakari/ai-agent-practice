@@ -1,7 +1,8 @@
-import { Document } from "@langchain/core/documents";
 import { PineconeStore } from "@langchain/pinecone";
 import { embeddingModel } from "../models.js";
 import { pineconeIndex } from "../lib/pinecone.js";
+import { TaskType } from "@google/generative-ai";
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 
 // Namespace is a concept from Pinecone that allows us to store data in different groups.
 // In this case, we are storing the cached answers in a different group from the AgroNexa documents.
@@ -11,9 +12,15 @@ const CACHE_NAMESPACE = "agronexa-semantic-cache";
 // The higher the score, the more likely it is that the cached answer is relevant to the user's question.
 const SIMILARITY_THRESHOLD = 0.85;
 
+// Configure the embedding LLM to use semantic similarity as the task type.
+const embeddingLLM = new GoogleGenerativeAIEmbeddings({
+  ...embeddingModel,
+  taskType: TaskType.SEMANTIC_SIMILARITY,
+});
+
 // Connects to the cache store.
 async function getCacheStore() {
-  return PineconeStore.fromExistingIndex(embeddingModel, {
+  return PineconeStore.fromExistingIndex(embeddingLLM, {
     pineconeIndex,
     namespace: CACHE_NAMESPACE,
   });
