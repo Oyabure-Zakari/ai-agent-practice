@@ -48,7 +48,7 @@ export async function saveQuestionAndAnswer(query: string, answer: string) {
   }
 }
 
-// Finds a cached answer that is similar enough to the user's question.
+// Uses the incoming user's query to search Pinecone for a sufficiently similar previously stored question and, if a suitable match exists, return the AI answer associated with that question.
 export async function findCachedAnswer(query: string) {
   try {
     // Connects to the cache store.
