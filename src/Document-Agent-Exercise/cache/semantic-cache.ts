@@ -63,7 +63,7 @@ export async function findCachedAnswer(query: string) {
     // Extract the matching saved question and its similarity score.
     const [matchedQuestion, similarityScore] = matchingQuestions[0]!;
 
-    // If the match is not similar enough, don't reuse its answer.
+    // Check if the incoming question is sufficiently similar to the saved question.
     if (similarityScore < SIMILARITY_THRESHOLD) return null;
 
     // Retrieve the AI answer saved alongside the matching question.
