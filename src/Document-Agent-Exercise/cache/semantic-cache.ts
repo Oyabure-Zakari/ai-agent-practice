@@ -9,7 +9,7 @@ import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 const CACHE_NAMESPACE = "agronexa-semantic-cache";
 
 // This is the minimum similarity score we will accept.
-// The higher the score, the more likely it is that the cached answer is relevant to the user's question.
+// The higher the score, the more likely that the cached question (previous question) is similar to the user's question (new question).
 const SIMILARITY_THRESHOLD = 0.85;
 
 // Configure the embedding LLM to use semantic similarity as the task type.
@@ -29,20 +29,19 @@ async function getCacheStore() {
 // Saves the user's question and the AI answer in Pinecone.
 export async function saveQuestionAndAnswer(query: string, answer: string) {
   try {
-    // Connects to the cache store.
+    // Connect to the Pinecone cache where we store previously asked questions and their answers.
     const store = await getCacheStore();
 
-    // Create a document with the user's question and the AI answer.
+    // Create a document containing the user's question and the AI's response.
     const cachedDocument = {
-      pageContent: query, // The user's question
-      // Extra information stored alongside the question.
+      // The incoming user's query is what will be used to search Pinecone for a previously stored, semantically similar question.
+      pageContent: query,
+      // Store the AI's answer alongside the question so we can retrieve it later.
       metadata: {
-        answer, // The AI answer
-        cachedAt: new Date().toISOString(), // The date and time the answer was saved
+        answer, // The AI's response to return when a similar question is found.
+        cachedAt: new Date().toISOString(), // The date and time the question and answer were saved.
       },
     };
-
-    // Save the question and its metadata in Pinecone.
     await store.addDocuments([cachedDocument]);
   } catch (error: unknown) {
     throw new Error(`Error saving cached document: ${(error as Error).message}`);
