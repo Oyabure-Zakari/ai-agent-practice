@@ -47,7 +47,8 @@ const retrieveDocumentsTool = tool(
 // Give the LLM access to the retrieval tool.
 const llmWithTools = llm.bindTools([retrieveDocumentsTool]);
 
-// Node 1: Let the LLM answer directly or request a tool.
+// Create Nodes
+// Node 1: This node calls the llm which decides whether to call a tool or not.
 const llmCall: GraphNode<typeof State> = async (state) => {
   console.log("Calling LLM...");
   const response = await llmWithTools.invoke([new SystemMessage(systemPrompt), ...state.messages]);
@@ -55,8 +56,7 @@ const llmCall: GraphNode<typeof State> = async (state) => {
     messages: [response],
   };
 };
-
-// Node 2: Execute tool calls requested by the LLM.
+// Node 2: This is used to call the tools and return the results.
 const toolNode = new ToolNode([retrieveDocumentsTool]);
 
 // Route to the tool node if the LLM requests a tool, otherwise, end the workfloe.
