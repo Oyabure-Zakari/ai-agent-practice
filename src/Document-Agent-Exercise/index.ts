@@ -94,14 +94,14 @@ async function runAgentWithCache(query: string) {
         answer: cachedAnswer,
       };
     }
-    console.log("SEMANTIC CACHE MISS");
-    console.log("Starting the LangGraph workflow...");
   } catch (error: unknown) {
     // If Pinecone/cache lookup fails, still try to answer the user.
     console.error(`Cache lookup failed: ${(error as Error).message}`);
     console.log("Continuing without cache.");
   }
 
+  console.log("SEMANTIC CACHE MISS");
+  console.log("Starting the LangGraph workflow...");
   // Run the LangGraph workflow because no cached answer was available.
   const result = await graph.invoke(
     {
