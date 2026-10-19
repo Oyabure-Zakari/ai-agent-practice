@@ -14,6 +14,7 @@ import * as z from "zod";
 import { retrieveDocuments } from "./documents/retrieve-documents.js";
 import userPrompt from "./prompts/userPrompt.js";
 import { systemPrompt } from "./prompts/systemPrompt.js";
+import { findCachedAnswer, saveQuestionAndAnswer } from "./cache/semantic-cache.js";
 
 // Set up the LLM.
 const llm = new ChatGroq({
@@ -79,18 +80,65 @@ const graph = new StateGraph(State)
   .addEdge("toolNode", "llmNode")
   .compile();
 
-// Run the graph.
-try {
-  const aiAgentResponse = await graph.invoke(
+// Checks if we already have an answer saved for a similar question If we do, return it. Otherwise, ask the AI to generate an answer and save it for future use.
+async function runAgentWithCache(query: string) {
+  // Use the incoming user query to search Pinecone for a similar question that was previously stored in the semantic cache and return its answer.
+  try {
+    const cachedAnswer = await findCachedAnswer(query);
+    if (cachedAnswer !== null) {
+      console.log("SEMANTIC CACHE HIT");
+      console.log("Skipping the LangGraph workflow.");
+      // Return the user query and the cached answer.
+      return {
+        userQuery: query,
+        answer: cachedAnswer,
+      };
+    }
+    console.log("SEMANTIC CACHE MISS");
+    console.log("Starting the LangGraph workflow...");
+  } catch (error: unknown) {
+    // If Pinecone/cache lookup fails, still try to answer the user.
+    console.error(`Cache lookup failed: ${(error as Error).message}`);
+    console.log("Continuing without cache.");
+  }
+
+  // Run the LangGraph workflow because no cached answer was available.
+  const result = await graph.invoke(
     {
-      messages: [new HumanMessage(userPrompt)], // 0 - 9 questions
+      messages: [new HumanMessage(query)],
     },
-    { recursionLimit: 5 },
+    {
+      recursionLimit: 5,
+    },
   );
-  // Log both the user's question and AI reponse
+
+  // Extract the AI response.
+  const generatedAnswer = result.messages.at(-1)?.content;
+
+  if (typeof generatedAnswer !== "string") {
+    throw new Error("The graph did not return a text response.");
+  }
+
+  // Save the incoming question and its newly generated answer in Pinecone. Later, a similar incoming question can find this stored question and reuse its answer without running the agent again.
+  try {
+    await saveQuestionAndAnswer(query, generatedAnswer);
+  } catch (error: unknown) {
+    // A cache write failure should not discard a valid answer.
+    console.error(`Cache save failed: ${(error as Error).message}`);
+  }
+  // Return the user query and the un-cached answer.
+  return {
+    userQuery: query,
+    answer: generatedAnswer,
+  };
+}
+
+// Run the agent
+try {
+  const response = await runAgentWithCache(userPrompt);
   console.log({
-    user: aiAgentResponse.messages[0]?.content, // User's question
-    response: aiAgentResponse.messages.at(-1)?.content, // AI response
+    user: response.userQuery,
+    response: response.answer,
   });
 } catch (error: unknown) {
   throw new Error(`Error running graph: ${(error as Error).message}`);
