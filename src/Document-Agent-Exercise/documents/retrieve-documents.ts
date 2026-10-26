@@ -17,11 +17,7 @@ export async function retrieveDocuments(query: string) {
     // Return the user's question and the relevant document chunks so that the llm can use them to generate a response.
     return {
       query,
-      pageContent : relevantChunks[0]?.pageContent,
-      metadata: {
-        id: relevantChunks[0]?.id,
-        source: relevantChunks[0]?.metadata.source
-      }
+      relevantChunks,
     };
   } catch (error: unknown) {
     throw new Error(`Failed to retrieve documents: ${(error as Error).message}`);
