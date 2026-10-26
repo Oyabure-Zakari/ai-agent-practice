@@ -18,7 +18,7 @@ export async function retrieveDocuments(query: string) {
     return {
       query,
       pageContent : relevantChunks[0]?.pageContent,
-      metaDate: {
+      metadata: {
         id: relevantChunks[0]?.id,
         source: relevantChunks[0]?.metadata.source
       }
