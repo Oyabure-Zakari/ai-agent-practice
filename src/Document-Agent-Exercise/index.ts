@@ -60,7 +60,7 @@ const llmCall: GraphNode<typeof State> = async (state) => {
 // Node 2: This is used to call the tools and return the results.
 const toolNode = new ToolNode([retrieveDocumentsTool]);
 
-// Route to the tool node if the LLM requests a tool, otherwise, end the workfloe.
+// Route to the tool node if the LLM requests a tool, otherwise, end the workflow.
 const shouldContinue: ConditionalEdgeRouter<{
   InputSchema: typeof State;
   Nodes: "toolNode" | "__end__";
